@@ -1,0 +1,12 @@
+[project]
+name = "hello-world"
+version = "0.1.0"
+description = "Returns the sum of two u32 integers"
+license = "LICENSE-MIT"
+
+[remote]
+author = "aleo"
+
+[target]
+curve = "bls12_377"
+proving_system = "groth16"

@@ -36,3 +36,18 @@ version = "1.6"
 
 [build-dependencies.prost-build]
 version = "0.7"
+
+[dev-dependencies.leo-compiler]
+path = "../../leo/compiler"
+#git = "https://github.com/AleoHQ/leo"
+#rev = "d9c26ea"
+
+[dev-dependencies.leo-package]
+path = "../../leo/package"
+#git = "https://github.com/AleoHQ/leo"
+#rev = "d9c26ea"
+
+[dev-dependencies.leo-parser]
+path = "../../leo/parser"
+#git = "https://github.com/AleoHQ/leo"
+#rev = "d9c26ea"
