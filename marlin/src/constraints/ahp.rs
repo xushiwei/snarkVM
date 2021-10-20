@@ -2013,11 +2013,11 @@ mod test {
 
         let mut evaluation_labels = Vec::<(String, Fr)>::new();
 
-        for (label, (_point_name, q)) in query_set.iter().cloned() {
-            if AHPForR1CSNative::<Fr>::LC_WITH_ZERO_EVAL.contains(&label.as_ref()) {
-                evaluations.insert((label, q), Fr::zero());
+        for q in query_set.iter().cloned() {
+            if AHPForR1CSNative::<Fr>::LC_WITH_ZERO_EVAL.contains(&q.0.as_ref()) {
+                evaluations.insert(q, Fr::zero());
             } else {
-                evaluation_labels.push((label, q));
+                evaluation_labels.push(q);
             }
         }
         evaluation_labels.sort_by(|a, b| a.0.cmp(&b.0));

@@ -14,11 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
+#[macro_use]
+pub mod int_macros;
+pub use int_macros::*;
+
 pub mod boolean;
 pub use boolean::*;
 
 pub mod boolean_input;
 pub use boolean_input::*;
+
+pub mod from_bits;
+pub use from_bits::*;
+
+pub mod from_bytes;
+pub use from_bytes::*;
 
 pub mod to_bits;
 pub use to_bits::*;

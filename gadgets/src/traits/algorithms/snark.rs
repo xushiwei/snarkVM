@@ -19,12 +19,10 @@ use snarkvm_fields::PrimeField;
 use snarkvm_r1cs::{errors::SynthesisError, ConstraintSystem};
 
 use crate::{
-    traits::alloc::AllocGadget,
-    AllocBytesGadget,
+    bits::{ToBitsLEGadget, ToBytesBEGadget, ToBytesLEGadget},
+    traits::alloc::{AllocBytesGadget, AllocGadget},
     FromFieldElementsGadget,
     MergeGadget,
-    ToBitsLEGadget,
-    ToBytesGadget,
     ToConstraintFieldGadget,
     ToMinimalBitsGadget,
 };
@@ -37,7 +35,8 @@ pub trait SNARKVerifierGadget<S: SNARK> {
     type PreparedVerificationKeyGadget: Clone;
     type VerificationKeyGadget: AllocGadget<S::VerifyingKey, S::BaseField>
         + ToConstraintFieldGadget<S::BaseField>
-        + ToBytesGadget<S::BaseField>
+        + ToBytesBEGadget<S::BaseField>
+        + ToBytesLEGadget<S::BaseField>
         + PrepareGadget<Self::PreparedVerificationKeyGadget, S::BaseField>
         + AllocBytesGadget<Vec<u8>, S::BaseField>
         + ToMinimalBitsGadget<S::BaseField>;

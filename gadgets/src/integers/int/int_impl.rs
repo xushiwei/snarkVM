@@ -14,8 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
+use snarkvm_fields::Field;
+use snarkvm_r1cs::{ConstraintSystem, SynthesisError};
+use snarkvm_utilities::ToBytes;
+
 use crate::{
-    bits::Boolean,
+    bits::{
+        Boolean,
+        FromBitsBEGadget,
+        FromBitsLEGadget,
+        FromBytesBEGadget,
+        FromBytesLEGadget,
+        ToBitsBEGadget,
+        ToBitsLEGadget,
+        ToBytesBEGadget,
+        ToBytesLEGadget,
+    },
     integers::uint::{UInt128, UInt16, UInt32, UInt64, UInt8},
     traits::integers::Integer,
 };
@@ -77,59 +91,16 @@ macro_rules! int_impl {
                 self.bits.iter().all(|bit| matches!(bit, Boolean::Constant(_)))
             }
 
-            fn to_bits_le(&self) -> Vec<Boolean> {
-                self.bits.clone()
-            }
-
-            fn to_bits_be(&self) -> Vec<Boolean> {
-                debug_assert_eq!(self.bits.len(), $size);
-                let mut res = self.bits.clone();
-                res.reverse();
-                res
-            }
-
-            fn from_bits_le(bits: &[Boolean]) -> Self {
-                assert_eq!(bits.len(), $size);
-
-                let bits = bits.to_vec();
-
-                let mut value = Some(0 as $utype_);
-                for b in bits.iter().rev() {
-                    value.as_mut().map(|v| *v <<= 1);
-
-                    match *b {
-                        Boolean::Constant(b) => {
-                            if b {
-                                value.as_mut().map(|v| *v |= 1);
-                            }
-                        }
-                        Boolean::Is(ref b) => match b.get_value() {
-                            Some(true) => {
-                                value.as_mut().map(|v| *v |= 1);
-                            }
-                            Some(false) => {}
-                            None => value = None,
-                        },
-                        Boolean::Not(ref b) => match b.get_value() {
-                            Some(false) => {
-                                value.as_mut().map(|v| *v |= 1);
-                            }
-                            Some(true) => {}
-                            None => value = None,
-                        },
-                    }
-                }
-
-                Self {
-                    value: value.map(|x| x as $type_),
-                    bits,
-                }
-            }
-
             fn get_value(&self) -> Option<String> {
                 self.value.map(|num| num.to_string())
             }
         }
+
+        to_bits_int_impl!($name);
+        to_bytes_int_impl!($name, $size);
+
+        from_bits_int_impl!($name, $type_, $utype_, $size);
+        from_bytes_int_impl!($name, $type_, { $size / UInt8::SIZE });
     };
 }
 

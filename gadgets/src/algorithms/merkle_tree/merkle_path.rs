@@ -25,9 +25,8 @@ use snarkvm_fields::PrimeField;
 use snarkvm_r1cs::{errors::SynthesisError, ConstraintSystem};
 
 use crate::{
-    bits::{boolean::Boolean, ToBytesGadget},
-    traits::{algorithms::CRHGadget, alloc::AllocGadget, eq::ConditionalEqGadget, select::CondSelectGadget},
-    EqGadget,
+    bits::{boolean::Boolean, ToBytesLEGadget},
+    traits::{algorithms::CRHGadget, alloc::AllocGadget, eq::ConditionalEqGadget},
 };
 
 pub struct MerklePathGadget<P: MerkleParameters, HG: CRHGadget<P::H, F>, F: PrimeField> {
@@ -42,7 +41,7 @@ impl<P: MerkleParameters, HG: CRHGadget<P::H, F>, F: PrimeField> MerklePathGadge
         &self,
         mut cs: CS,
         crh: &HG,
-        leaf: impl ToBytesGadget<F>,
+        leaf: impl ToBytesLEGadget<F>,
     ) -> Result<HG::OutputGadget, SynthesisError> {
         let leaf_bytes = leaf.to_bytes(&mut cs.ns(|| "leaf_to_bytes"))?;
         let mut curr_hash = crh.check_evaluation_gadget(cs.ns(|| "leaf_hash"), leaf_bytes)?;
@@ -82,8 +81,8 @@ impl<P: MerkleParameters, HG: CRHGadget<P::H, F>, F: PrimeField> MerklePathGadge
         mut cs: CS,
         crh: &HG,
         old_root: &HG::OutputGadget,
-        old_leaf: impl ToBytesGadget<F>,
-        new_leaf: impl ToBytesGadget<F>,
+        old_leaf: impl ToBytesLEGadget<F>,
+        new_leaf: impl ToBytesLEGadget<F>,
     ) -> Result<HG::OutputGadget, SynthesisError> {
         self.check_membership(cs.ns(|| "check_membership"), &crh, &old_root, &old_leaf)?;
         Ok(self.calculate_root(cs.ns(|| "calculate_root"), &crh, &new_leaf)?)
@@ -95,8 +94,8 @@ impl<P: MerkleParameters, HG: CRHGadget<P::H, F>, F: PrimeField> MerklePathGadge
         crh: &HG,
         old_root: &HG::OutputGadget,
         new_root: &HG::OutputGadget,
-        old_leaf: impl ToBytesGadget<F>,
-        new_leaf: impl ToBytesGadget<F>,
+        old_leaf: impl ToBytesLEGadget<F>,
+        new_leaf: impl ToBytesLEGadget<F>,
     ) -> Result<(), SynthesisError> {
         let actual_new_root = self.update_leaf(cs.ns(|| "check_membership"), &crh, &old_root, &old_leaf, &new_leaf)?;
 
@@ -110,7 +109,7 @@ impl<P: MerkleParameters, HG: CRHGadget<P::H, F>, F: PrimeField> MerklePathGadge
         cs: CS,
         crh: &HG,
         root: &HG::OutputGadget,
-        leaf: impl ToBytesGadget<F>,
+        leaf: impl ToBytesLEGadget<F>,
     ) -> Result<(), SynthesisError> {
         self.conditionally_check_membership(cs, crh, root, leaf, &Boolean::Constant(true))
     }
@@ -120,7 +119,7 @@ impl<P: MerkleParameters, HG: CRHGadget<P::H, F>, F: PrimeField> MerklePathGadge
         mut cs: CS,
         crh: &HG,
         root: &HG::OutputGadget,
-        leaf: impl ToBytesGadget<F>,
+        leaf: impl ToBytesLEGadget<F>,
         should_enforce: &Boolean,
     ) -> Result<(), SynthesisError> {
         let expected_root = self.calculate_root(cs.ns(|| "calculate_root"), crh, leaf)?;
@@ -141,8 +140,8 @@ where
     H: CRH,
     HG: CRHGadget<H, F>,
 {
-    let left_bytes = left_child.to_bytes(&mut cs.ns(|| "left_to_bytes"))?;
-    let right_bytes = right_child.to_bytes(&mut cs.ns(|| "right_to_bytes"))?;
+    let left_bytes = left_child.to_bytes_le(&mut cs.ns(|| "left_to_bytes"))?;
+    let right_bytes = right_child.to_bytes_le(&mut cs.ns(|| "right_to_bytes"))?;
     let mut bytes = left_bytes;
     bytes.extend_from_slice(&right_bytes);
 

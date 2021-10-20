@@ -203,7 +203,7 @@ mod tests {
         AffineCurve,
     };
     use snarkvm_gadgets::{
-        bits::ToBytesGadget,
+        bits::ToBytesLEGadget,
         curves::bls12_377::PairingGadget as Bls12_377PairingGadget,
         traits::eq::EqGadget,
     };
@@ -349,7 +349,7 @@ mod tests {
             // Convert the gadget commitments to bytes
             let _commitment_gadget_bytes = commitment_gadget
                 .commitment
-                .to_bytes(cs.ns(|| format!("commitment_to_bytes_{}", i)))
+                .to_bytes_le(cs.ns(|| format!("commitment_to_bytes_{}", i)))
                 .unwrap();
         }
     }

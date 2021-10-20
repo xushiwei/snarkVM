@@ -76,7 +76,7 @@ mod tests {
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaChaRng;
 
-    use snarkvm_curves::bls12_377::Fq;
+    use snarkvm_curves::bls12_377::Fr;
     use snarkvm_gadgets::traits::eq::EqGadget;
     use snarkvm_r1cs::TestConstraintSystem;
     use snarkvm_utilities::rand::UniformRand;
@@ -85,8 +85,8 @@ mod tests {
 
     use super::*;
 
-    type Sponge = PoseidonSponge<Fq>;
-    type SpongeVar = PoseidonSpongeVar<Fq>;
+    type Sponge = PoseidonSponge<Fr>;
+    type SpongeVar = PoseidonSpongeVar<Fr>;
 
     const MAX_ELEMENTS: usize = 100;
     const ITERATIONS: usize = 100;
@@ -96,14 +96,14 @@ mod tests {
         let mut rng = ChaChaRng::seed_from_u64(123456789u64);
 
         for i in 0..ITERATIONS {
-            let mut cs = TestConstraintSystem::<Fq>::new();
+            let mut cs = TestConstraintSystem::<Fr>::new();
 
             // Create a new algebraic sponge.
             let mut sponge = Sponge::new();
 
             // Generate random elements to absorb.
             let num_elements: usize = rng.gen_range(0..MAX_ELEMENTS);
-            let elements: Vec<_> = (0..num_elements).map(|_| Fq::rand(&mut rng)).collect();
+            let elements: Vec<_> = (0..num_elements).map(|_| Fr::rand(&mut rng)).collect();
 
             // Absorb the random elements.
             sponge.absorb(&elements);
@@ -136,7 +136,7 @@ mod tests {
         let mut rng = ChaChaRng::seed_from_u64(123456789u64);
 
         for i in 0..ITERATIONS {
-            let mut cs = TestConstraintSystem::<Fq>::new();
+            let mut cs = TestConstraintSystem::<Fr>::new();
 
             // Create a new algebraic sponge.
             let mut sponge = Sponge::new();
@@ -146,7 +146,7 @@ mod tests {
 
             // Generate random elements to absorb.
             let num_elements: usize = rng.gen_range(0..MAX_ELEMENTS);
-            let elements: Vec<_> = (0..num_elements).map(|_| Fq::rand(&mut rng)).collect();
+            let elements: Vec<_> = (0..num_elements).map(|_| Fr::rand(&mut rng)).collect();
 
             let mut element_gadgets = vec![];
             for (j, element) in elements.iter().enumerate() {

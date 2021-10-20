@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{AllocGadget, EqGadget, FpGadget, ToBytesGadget};
+use crate::{AllocGadget, EqGadget, FpGadget, ToBytesLEGadget};
 use snarkvm_algorithms::CryptoHash;
 use snarkvm_fields::PrimeField;
 use snarkvm_r1cs::{ConstraintSystem, SynthesisError};
 use snarkvm_utilities::fmt::Debug;
 
 pub trait CryptoHashGadget<P: CryptoHash, F: PrimeField> {
-    type OutputGadget: EqGadget<F> + ToBytesGadget<F> + AllocGadget<P::Output, F> + Clone + Debug;
+    type OutputGadget: EqGadget<F> + ToBytesLEGadget<F> + AllocGadget<P::Output, F> + Clone + Debug;
 
     fn check_evaluation_gadget<CS: ConstraintSystem<F>>(
         cs: CS,

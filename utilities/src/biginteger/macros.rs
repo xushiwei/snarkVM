@@ -192,6 +192,13 @@ macro_rules! biginteger {
 
                 res
             }
+
+            fn from_slice(input: &[u64]) -> Self {
+                let mut out = [0u64; $num_limbs];
+                let len = input.len().min($num_limbs);
+                out[..len].copy_from_slice(&input[..len]);
+                Self(out)
+            }
         }
 
         impl ToBits for $name {
@@ -310,6 +317,13 @@ macro_rules! biginteger {
                 let mut repr = Self::default();
                 repr.0[0] = val;
                 repr
+            }
+        }
+
+        impl Into<u64> for $name {
+            #[inline]
+            fn into(self) -> u64 {
+                self.0[0]
             }
         }
     };

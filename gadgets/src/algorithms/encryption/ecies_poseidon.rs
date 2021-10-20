@@ -25,7 +25,8 @@ use crate::{
     FpGadget,
     GroupGadget,
     Integer,
-    ToBytesGadget,
+    ToBitsLEGadget,
+    ToBytesLEGadget,
     UInt8,
 };
 use itertools::Itertools;
@@ -98,15 +99,15 @@ impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> AllocGadget<TE:
     }
 }
 
-impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesGadget<F>
+impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesLEGadget<F>
     for ECIESPoseidonEncryptionPrivateKeyGadget<TE, F>
 {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.to_bytes(&mut cs.ns(|| "to_bytes"))
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.to_bytes_le(&mut cs.ns(|| "to_bytes_le"))
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.to_bytes_strict(&mut cs.ns(|| "to_bytes_strict"))
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.to_bytes_le_strict(&mut cs.ns(|| "to_bytes_le_strict"))
     }
 }
 
@@ -302,15 +303,15 @@ impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ConditionalEqGa
     }
 }
 
-impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesGadget<F>
+impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesLEGadget<F>
     for ECIESPoseidonEncryptionPublicKeyGadget<TE, F>
 {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.x.to_bytes(cs)
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.x.to_bytes_le(cs)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.x.to_bytes_strict(cs)
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.x.to_bytes_le_strict(cs)
     }
 }
 

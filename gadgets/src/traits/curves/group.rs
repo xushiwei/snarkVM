@@ -15,12 +15,13 @@
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-    bits::{Boolean, ToBitsBEGadget, ToBytesGadget},
+    bits::{Boolean, ToBitsBEGadget, ToBytesBEGadget, ToBytesLEGadget},
     traits::{
         alloc::AllocGadget,
         eq::{EqGadget, NEqGadget},
         select::CondSelectGadget,
     },
+    ToBitsLEGadget,
 };
 use snarkvm_curves::traits::{AffineCurve, Group, ProjectiveCurve};
 use snarkvm_fields::Field;
@@ -31,10 +32,12 @@ use std::{borrow::Borrow, fmt::Debug};
 
 pub trait GroupGadget<G: Group, F: Field>:
     Sized
-    + ToBytesGadget<F>
+    + ToBytesBEGadget<F>
+    + ToBytesLEGadget<F>
     + NEqGadget<F>
     + EqGadget<F>
     + ToBitsBEGadget<F>
+    + ToBitsLEGadget<F>
     + CondSelectGadget<F>
     + AllocGadget<G, F>
     + Clone
@@ -255,7 +258,7 @@ pub trait GroupGadget<G: Group, F: Field>:
 pub trait CurveGadget<G: ProjectiveCurve, F: Field>: GroupGadget<G, F> + AllocGadget<G::Affine, F> {}
 
 pub trait CompressedGroupGadget<G: ProjectiveCurve, F: Field>: CurveGadget<G, F> {
-    type BaseFieldGadget: ToBytesGadget<F>
+    type BaseFieldGadget: ToBytesBEGadget<F>
         + ToBitsBEGadget<F>
         + EqGadget<F>
         + CondSelectGadget<F>

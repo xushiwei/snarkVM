@@ -22,6 +22,8 @@ use snarkvm_fields::ToConstraintField;
 use snarkvm_r1cs::{errors::SynthesisError, ConstraintSystem};
 
 use crate::{
+    bits::{Boolean, ToBytesLEGadget},
+    integers::uint::UInt8,
     traits::{
         algorithms::snark::SNARKVerifierGadget,
         alloc::AllocGadget,
@@ -29,14 +31,11 @@ use crate::{
         eq::EqGadget,
     },
     AllocBytesGadget,
-    Boolean,
     BooleanInputGadget,
     FpGadget,
     PrepareGadget,
-    ToBytesGadget,
     ToConstraintFieldGadget,
     ToMinimalBitsGadget,
-    UInt8,
 };
 use snarkvm_utilities::FromBytes;
 
@@ -404,44 +403,119 @@ where
     }
 }
 
-impl<PairingE, P> ToBytesGadget<PairingE::Fq> for VerifyingKeyGadget<PairingE, P>
+impl<PairingE, P> ToBytesLEGadget<PairingE::Fq> for VerifyingKeyGadget<PairingE, P>
 where
     PairingE: PairingEngine,
     P: PairingGadget<PairingE>,
 {
     #[inline]
-    fn to_bytes<CS: ConstraintSystem<PairingE::Fq>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+    fn to_bytes_le<CS: ConstraintSystem<PairingE::Fq>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         let mut bytes = Vec::new();
-        bytes.extend_from_slice(&self.alpha_g1.to_bytes(&mut cs.ns(|| "alpha_g1 to bytes"))?);
-        bytes.extend_from_slice(&self.beta_g2.to_bytes(&mut cs.ns(|| "beta_g2 to bytes"))?);
-        bytes.extend_from_slice(&self.gamma_g2.to_bytes(&mut cs.ns(|| "gamma_g2 to bytes"))?);
-        bytes.extend_from_slice(&self.delta_g2.to_bytes(&mut cs.ns(|| "delta_g2 to bytes"))?);
+        bytes.extend_from_slice(&self.alpha_g1.to_bytes_le(cs.ns(|| "alpha_g1 to_bytes_le"))?);
+        bytes.extend_from_slice(&self.beta_g2.to_bytes_le(cs.ns(|| "beta_g2 to_bytes_le"))?);
+        bytes.extend_from_slice(&self.gamma_g2.to_bytes_le(cs.ns(|| "gamma_g2 to_bytes_le"))?);
+        bytes.extend_from_slice(&self.delta_g2.to_bytes_le(cs.ns(|| "delta_g2 to_bytes_le"))?);
         bytes.extend_from_slice(&UInt8::alloc_vec(
             &mut cs.ns(|| "gamma_abc_g1_length"),
             &(self.gamma_abc_g1.len() as u32).to_le_bytes()[..],
         )?);
         for (i, g) in self.gamma_abc_g1.iter().enumerate() {
             let mut cs = cs.ns(|| format!("Iteration {}", i));
-            bytes.extend_from_slice(&g.to_bytes(&mut cs.ns(|| "g"))?);
+            bytes.extend_from_slice(&g.to_bytes_le(cs.ns(|| "g"))?);
         }
         Ok(bytes)
     }
 
     #[inline]
-    fn to_bytes_strict<CS: ConstraintSystem<PairingE::Fq>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+    fn to_bytes_le_strict<CS: ConstraintSystem<PairingE::Fq>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         let mut bytes = Vec::new();
-        bytes.extend_from_slice(&self.alpha_g1.to_bytes_strict(&mut cs.ns(|| "alpha_g1 to bytes"))?);
-        bytes.extend_from_slice(&self.beta_g2.to_bytes_strict(&mut cs.ns(|| "beta_g2 to bytes"))?);
-        bytes.extend_from_slice(&self.gamma_g2.to_bytes_strict(&mut cs.ns(|| "gamma_g2 to bytes"))?);
-        bytes.extend_from_slice(&self.delta_g2.to_bytes_strict(&mut cs.ns(|| "delta_g2 to bytes"))?);
+        bytes.extend_from_slice(
+            &self
+                .alpha_g1
+                .to_bytes_le_strict(cs.ns(|| "alpha_g1 to_bytes_le_strict"))?,
+        );
+        bytes.extend_from_slice(
+            &self
+                .beta_g2
+                .to_bytes_le_strict(cs.ns(|| "beta_g2 to_bytes_le_strict"))?,
+        );
+        bytes.extend_from_slice(
+            &self
+                .gamma_g2
+                .to_bytes_le_strict(cs.ns(|| "gamma_g2 to_bytes_le_strict"))?,
+        );
+        bytes.extend_from_slice(
+            &self
+                .delta_g2
+                .to_bytes_le_strict(cs.ns(|| "delta_g2 to_bytes_le_strict"))?,
+        );
         bytes.extend_from_slice(&UInt8::alloc_vec(
             &mut cs.ns(|| "gamma_abc_g1_length"),
             &(self.gamma_abc_g1.len() as u32).to_le_bytes()[..],
         )?);
         for (i, g) in self.gamma_abc_g1.iter().enumerate() {
             let mut cs = cs.ns(|| format!("Iteration {}", i));
-            bytes.extend_from_slice(&g.to_bytes_strict(&mut cs.ns(|| "g"))?);
+            bytes.extend_from_slice(&g.to_bytes_le_strict(cs.ns(|| "g"))?);
         }
         Ok(bytes)
     }
 }
+// todo @collinc97: uncomment or remove
+// impl<PairingE, P> ToBytesBEGadget<PairingE::Fq> for VerifyingKeyGadget<PairingE, P>
+// where
+//     PairingE: PairingEngine,
+//     ConstraintF: Field,
+//     P: PairingGadget<PairingE, ConstraintF>,
+// {
+//     #[inline]
+//     fn to_bytes_be<CS: ConstraintSystem<PairingE::Fq>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+//         let mut bytes = Vec::new();
+//         bytes.extend_from_slice(&self.alpha_g1.to_bytes_be(cs.ns(|| "alpha_g1 to_bytes_be"))?);
+//         bytes.extend_from_slice(&self.beta_g2.to_bytes_be(cs.ns(|| "beta_g2 to_bytes_be"))?);
+//         bytes.extend_from_slice(&self.gamma_g2.to_bytes_be(cs.ns(|| "gamma_g2 to_bytes_be"))?);
+//         bytes.extend_from_slice(&self.delta_g2.to_bytes_be(cs.ns(|| "delta_g2 to_bytes_be"))?);
+//         bytes.extend_from_slice(&UInt8::alloc_vec(
+//             &mut cs.ns(|| "gamma_abc_g1_bength"),
+//             &(self.gamma_abc_g1.len() as u32).to_be_bytes()[..],
+//         )?);
+//         for (i, g) in self.gamma_abc_g1.iter().enumerate() {
+//             let mut cs = cs.ns(|| format!("Iteration {}", i));
+//             bytes.extend_from_slice(&g.to_bytes_be(cs.ns(|| "g"))?);
+//         }
+//         Ok(bytes)
+//     }
+//
+//     #[inline]
+//     fn to_bytes_be_strict<CS: ConstraintSystem<ConstraintF>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+//         let mut bytes = Vec::new();
+//         bytes.extend_from_slice(
+//             &self
+//                 .alpha_g1
+//                 .to_bytes_be_strict(cs.ns(|| "alpha_g1 to_bytes_be_strict"))?,
+//         );
+//         bytes.extend_from_slice(
+//             &self
+//                 .beta_g2
+//                 .to_bytes_be_strict(cs.ns(|| "beta_g2 to_bytes_be_strict"))?,
+//         );
+//         bytes.extend_from_slice(
+//             &self
+//                 .gamma_g2
+//                 .to_bytes_be_strict(cs.ns(|| "gamma_g2 to_bytes_be_strict"))?,
+//         );
+//         bytes.extend_from_slice(
+//             &self
+//                 .delta_g2
+//                 .to_bytes_be_strict(cs.ns(|| "delta_g2 to_bytes_be_strict"))?,
+//         );
+//         bytes.extend_from_slice(&UInt8::alloc_vec(
+//             &mut cs.ns(|| "gamma_abc_g1_bength"),
+//             &(self.gamma_abc_g1.len() as u32).to_be_bytes()[..],
+//         )?);
+//         for (i, g) in self.gamma_abc_g1.iter().enumerate() {
+//             let mut cs = cs.ns(|| format!("Iteration {}", i));
+//             bytes.extend_from_slice(&g.to_bytes_be_strict(cs.ns(|| "g"))?);
+//         }
+//         Ok(bytes)
+//     }
+// }

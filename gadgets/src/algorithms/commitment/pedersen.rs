@@ -17,7 +17,7 @@
 use crate::{
     integers::uint::UInt8,
     traits::{algorithms::CommitmentGadget, alloc::AllocGadget, curves::CurveGadget, integers::Integer},
-    ToBytesGadget,
+    ToBytesLEGadget,
 };
 use snarkvm_algorithms::commitment::PedersenCommitment;
 use snarkvm_curves::ProjectiveCurve;
@@ -65,13 +65,13 @@ impl<G: ProjectiveCurve, F: PrimeField> AllocGadget<G::ScalarField, F> for Peder
     }
 }
 
-impl<G: ProjectiveCurve, F: PrimeField> ToBytesGadget<F> for PedersenRandomnessGadget<G> {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.to_bytes(cs)
+impl<G: ProjectiveCurve, F: PrimeField> ToBytesLEGadget<F> for PedersenRandomnessGadget<G> {
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.to_bytes_le(cs)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.to_bytes_strict(cs)
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.to_bytes_le_strict(cs)
     }
 }
 
@@ -159,12 +159,12 @@ impl<G: ProjectiveCurve, F: PrimeField, GG: CurveGadget<G, F>, const NUM_WINDOWS
         assert_eq!(bases.len(), NUM_WINDOWS);
 
         // Allocate new variable for commitment output.
-        let input_in_bits: Vec<_> = padded_input.iter().flat_map(|byte| byte.to_bits_le()).collect();
+        let input_in_bits: Vec<_> = padded_input.iter().flat_map(|byte| byte.u8_to_bits_le()).collect();
         let input_in_bits = input_in_bits.chunks(WINDOW_SIZE);
         let mut result = GG::multi_scalar_multiplication(cs.ns(|| "msm"), bases, input_in_bits)?;
 
         // Compute h^r
-        let rand_bits = randomness.0.iter().flat_map(|byte| byte.to_bits_le());
+        let rand_bits = randomness.0.iter().flat_map(|byte| byte.u8_to_bits_le());
         result.scalar_multiplication(cs.ns(|| "randomizer"), rand_bits.zip(&self.pedersen.random_base))?;
 
         Ok(result)

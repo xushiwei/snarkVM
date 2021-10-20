@@ -62,6 +62,7 @@ pub trait BigInteger:
     + AsMut<[u64]>
     + AsRef<[u64]>
     + From<u64>
+    + Into<u64>
 {
     /// The number of limbs used in this BigInteger.
     const NUM_LIMBS: usize;
@@ -107,6 +108,9 @@ pub trait BigInteger:
 
     /// Returns a vector for wnaf.
     fn find_wnaf(&self) -> Vec<i64>;
+
+    /// Creates a BigInteger by copying `input`. Will truncate or expand as needed.
+    fn from_slice(input: &[u64]) -> Self;
 }
 
 pub mod arithmetic {

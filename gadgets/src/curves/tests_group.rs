@@ -50,10 +50,4 @@ pub fn group_test<F: Field, G: Group, GG: GroupGadget<G, F>, CS: ConstraintSyste
     b2.double_in_place(cs.ns(|| "2b")).unwrap();
     let b_b = b.add(cs.ns(|| "b + b"), &b).unwrap();
     assert_eq!(b2, b_b);
-
-    let _ = a.to_bytes(&mut cs.ns(|| "ToBytes")).unwrap();
-    let _ = a.to_bytes_strict(&mut cs.ns(|| "ToBytes Strict")).unwrap();
-
-    let _ = b.to_bytes(&mut cs.ns(|| "b ToBytes")).unwrap();
-    let _ = b.to_bytes_strict(&mut cs.ns(|| "b ToBytes Strict")).unwrap();
 }

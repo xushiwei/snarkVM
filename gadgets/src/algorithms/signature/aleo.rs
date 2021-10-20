@@ -16,7 +16,7 @@
 
 use crate::{
     algorithms::crypto_hash::PoseidonCryptoHashGadget,
-    bits::{Boolean, ToBytesGadget},
+    bits::{Boolean, ToBytesLEGadget},
     integers::uint::UInt8,
     traits::{
         algorithms::SignatureGadget,
@@ -120,15 +120,15 @@ impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ConditionalEqGa
 
 impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> EqGadget<F> for AleoSignaturePublicKeyGadget<TE, F> {}
 
-impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesGadget<F>
+impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesLEGadget<F>
     for AleoSignaturePublicKeyGadget<TE, F>
 {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.x.to_bytes(cs)
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.x.to_bytes_le(cs)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.x.to_bytes_strict(cs)
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.x.to_bytes_le_strict(cs)
     }
 }
 
@@ -285,48 +285,48 @@ impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ConditionalEqGa
 
 impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> EqGadget<F> for AleoSignatureGadget<TE, F> {}
 
-impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesGadget<F> for AleoSignatureGadget<TE, F> {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+impl<TE: TwistedEdwardsParameters<BaseField = F>, F: PrimeField> ToBytesLEGadget<F> for AleoSignatureGadget<TE, F> {
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         let mut result = Vec::new();
 
         result.extend(
             self.prover_response
-                .to_bytes(&mut cs.ns(|| "prover_response_to_bytes"))?,
+                .to_bytes_le(&mut cs.ns(|| "prover_response_to_bytes_le"))?,
         );
         result.extend(
             self.verifier_challenge
-                .to_bytes(&mut cs.ns(|| "verifier_challenge_to_bytes"))?,
+                .to_bytes_le(&mut cs.ns(|| "verifier_challenge_to_bytes_le"))?,
         );
         result.extend(
             self.root_public_key
-                .to_bytes(&mut cs.ns(|| "root_public_key_to_bytes"))?,
+                .to_bytes_le(&mut cs.ns(|| "root_public_key_to_bytes_le"))?,
         );
         result.extend(
             self.root_randomizer
-                .to_bytes(&mut cs.ns(|| "root_randomizer_to_bytes"))?,
+                .to_bytes_le(&mut cs.ns(|| "root_randomizer_to_bytes_le"))?,
         );
 
         Ok(result)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         let mut result = Vec::new();
 
         result.extend(
             self.prover_response
-                .to_bytes_strict(&mut cs.ns(|| "prover_response_to_bytes_strict"))?,
+                .to_bytes_le_strict(&mut cs.ns(|| "prover_response_to_bytes_le_strict"))?,
         );
         result.extend(
             self.verifier_challenge
-                .to_bytes_strict(&mut cs.ns(|| "verifier_challenge_to_bytes_strict"))?,
+                .to_bytes_le_strict(&mut cs.ns(|| "verifier_challenge_to_bytes_le_strict"))?,
         );
         result.extend(
             self.root_public_key
-                .to_bytes_strict(&mut cs.ns(|| "root_public_key_to_bytes_strict"))?,
+                .to_bytes_le_strict(&mut cs.ns(|| "root_public_key_to_bytes_le_strict"))?,
         );
         result.extend(
             self.root_randomizer
-                .to_bytes_strict(&mut cs.ns(|| "root_randomizer_to_bytes_strict"))?,
+                .to_bytes_le_strict(&mut cs.ns(|| "root_randomizer_to_bytes_le_strict"))?,
         );
 
         Ok(result)

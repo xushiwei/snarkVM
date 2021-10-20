@@ -25,7 +25,7 @@ use snarkvm_r1cs::{errors::SynthesisError, Assignment, ConstraintSystem};
 use snarkvm_utilities::bititerator::BitIteratorBE;
 
 use crate::{
-    bits::{Boolean, ToBitsBEGadget, ToBytesGadget},
+    bits::{Boolean, ToBitsBEGadget, ToBitsLEGadget, ToBytesBEGadget, ToBytesLEGadget},
     fields::FpGadget,
     integers::uint::UInt8,
     traits::{
@@ -660,16 +660,40 @@ where
     FG: FieldGadget<P::BaseField, F>,
 {
     fn to_bits_be<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<Boolean>, SynthesisError> {
-        let mut x_bits = self.x.to_bits_be(&mut cs.ns(|| "X Coordinate To Bits"))?;
-        let y_bits = self.y.to_bits_be(&mut cs.ns(|| "Y Coordinate To Bits"))?;
+        let mut x_bits = self.x.to_bits_be(&mut cs.ns(|| "X Coordinate To Bits BE"))?;
+        let y_bits = self.y.to_bits_be(&mut cs.ns(|| "Y Coordinate To Bits BE"))?;
         x_bits.extend_from_slice(&y_bits);
         x_bits.push(self.infinity);
         Ok(x_bits)
     }
 
     fn to_bits_be_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<Boolean>, SynthesisError> {
-        let mut x_bits = self.x.to_bits_be_strict(&mut cs.ns(|| "X Coordinate To Bits"))?;
-        let y_bits = self.y.to_bits_be_strict(&mut cs.ns(|| "Y Coordinate To Bits"))?;
+        let mut x_bits = self.x.to_bits_be_strict(&mut cs.ns(|| "X Coordinate To Bits BE"))?;
+        let y_bits = self.y.to_bits_be_strict(&mut cs.ns(|| "Y Coordinate To Bits BE"))?;
+        x_bits.extend_from_slice(&y_bits);
+        x_bits.push(self.infinity);
+
+        Ok(x_bits)
+    }
+}
+
+impl<P, F, FG> ToBitsLEGadget<F> for AffineGadget<P, F, FG>
+where
+    P: ShortWeierstrassParameters,
+    F: Field,
+    FG: FieldGadget<P::BaseField, F>,
+{
+    fn to_bits_le<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<Boolean>, SynthesisError> {
+        let mut x_bits = self.x.to_bits_le(cs.ns(|| "X Coordinate To Bits LE"))?;
+        let y_bits = self.y.to_bits_le(cs.ns(|| "Y Coordinate To Bits LE"))?;
+        x_bits.extend_from_slice(&y_bits);
+        x_bits.push(self.infinity);
+        Ok(x_bits)
+    }
+
+    fn to_bits_le_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<Boolean>, SynthesisError> {
+        let mut x_bits = self.x.to_bits_le_strict(cs.ns(|| "X Coordinate To Bits LE"))?;
+        let y_bits = self.y.to_bits_le_strict(cs.ns(|| "Y Coordinate To Bits LE"))?;
         x_bits.extend_from_slice(&y_bits);
         x_bits.push(self.infinity);
 
@@ -697,25 +721,51 @@ where
     }
 }
 
-impl<P, F, FG> ToBytesGadget<F> for AffineGadget<P, F, FG>
+impl<P, F, FG> ToBytesBEGadget<F> for AffineGadget<P, F, FG>
 where
     P: ShortWeierstrassParameters,
     F: Field,
     FG: FieldGadget<P::BaseField, F>,
 {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        let mut x_bytes = self.x.to_bytes(&mut cs.ns(|| "X Coordinate To Bytes"))?;
-        let y_bytes = self.y.to_bytes(&mut cs.ns(|| "Y Coordinate To Bytes"))?;
-        let inf_bytes = self.infinity.to_bytes(&mut cs.ns(|| "Infinity to Bytes"))?;
+    fn to_bytes_be<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut x_bytes = self.x.to_bytes_be(&mut cs.ns(|| "X Coordinate To Bytes BE"))?;
+        let y_bytes = self.y.to_bytes_be(&mut cs.ns(|| "Y Coordinate To Bytes BE"))?;
+        let inf_bytes = self.infinity.to_bytes_be(&mut cs.ns(|| "Infinity to Bytes BE"))?;
         x_bytes.extend_from_slice(&y_bytes);
         x_bytes.extend_from_slice(&inf_bytes);
         Ok(x_bytes)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        let mut x_bytes = self.x.to_bytes_strict(&mut cs.ns(|| "X Coordinate To Bytes"))?;
-        let y_bytes = self.y.to_bytes_strict(&mut cs.ns(|| "Y Coordinate To Bytes"))?;
-        let inf_bytes = self.infinity.to_bytes(&mut cs.ns(|| "Infinity to Bytes"))?;
+    fn to_bytes_be_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut x_bytes = self.x.to_bytes_be_strict(&mut cs.ns(|| "X Coordinate To Bytes BE"))?;
+        let y_bytes = self.y.to_bytes_be_strict(&mut cs.ns(|| "Y Coordinate To Bytes BE"))?;
+        let inf_bytes = self.infinity.to_bytes_be(&mut cs.ns(|| "Infinity to Bytes BE"))?;
+        x_bytes.extend_from_slice(&y_bytes);
+        x_bytes.extend_from_slice(&inf_bytes);
+
+        Ok(x_bytes)
+    }
+}
+
+impl<P, F, FG> ToBytesLEGadget<F> for AffineGadget<P, F, FG>
+where
+    P: ShortWeierstrassParameters,
+    F: Field,
+    FG: FieldGadget<P::BaseField, F>,
+{
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut x_bytes = self.x.to_bytes_le(&mut cs.ns(|| "X Coordinate To Bytes LE"))?;
+        let y_bytes = self.y.to_bytes_le(&mut cs.ns(|| "Y Coordinate To Bytes LE"))?;
+        let inf_bytes = self.infinity.to_bytes_le(&mut cs.ns(|| "Infinity to Bytes LE"))?;
+        x_bytes.extend_from_slice(&y_bytes);
+        x_bytes.extend_from_slice(&inf_bytes);
+        Ok(x_bytes)
+    }
+
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut x_bytes = self.x.to_bytes_le_strict(&mut cs.ns(|| "X Coordinate To Bytes LE"))?;
+        let y_bytes = self.y.to_bytes_le_strict(&mut cs.ns(|| "Y Coordinate To Bytes LE"))?;
+        let inf_bytes = self.infinity.to_bytes_le(&mut cs.ns(|| "Infinity to Bytes LE"))?;
         x_bytes.extend_from_slice(&y_bytes);
         x_bytes.extend_from_slice(&inf_bytes);
 

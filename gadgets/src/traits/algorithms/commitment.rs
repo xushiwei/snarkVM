@@ -21,7 +21,7 @@ use snarkvm_fields::Field;
 use snarkvm_r1cs::{errors::SynthesisError, ConstraintSystem};
 
 use crate::{
-    bits::ToBytesGadget,
+    bits::{ToBytesBEGadget, ToBytesLEGadget},
     integers::uint::UInt8,
     traits::{
         alloc::AllocGadget,
@@ -35,13 +35,14 @@ pub trait CommitmentGadget<C: CommitmentScheme, F: Field>: AllocGadget<C, F> + C
     type OutputGadget: ConditionalEqGadget<F>
         + CondSelectGadget<F>
         + EqGadget<F>
-        + ToBytesGadget<F>
         + ToBitsBEGadget<F>
+        + ToBytesBEGadget<F>
+        + ToBytesLEGadget<F>
         + AllocGadget<C::Output, F>
         + Clone
         + Sized
         + Debug;
-    type RandomnessGadget: AllocGadget<C::Randomness, F> + ToBytesGadget<F> + Clone;
+    type RandomnessGadget: AllocGadget<C::Randomness, F> + ToBytesLEGadget<F> + Clone;
 
     fn check_commitment_gadget<CS: ConstraintSystem<F>>(
         &self,

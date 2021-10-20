@@ -20,7 +20,7 @@ use hashbrown::{HashMap, HashSet};
 
 use snarkvm_fields::PrimeField;
 use snarkvm_gadgets::{
-    bits::Boolean,
+    bits::{Boolean, ToBytesBEGadget, ToBytesLEGadget},
     fields::FpGadget,
     nonnative::NonNativeFieldVar,
     traits::alloc::AllocGadget,
@@ -159,7 +159,8 @@ pub trait PCCheckVar<PCF: PrimeField, PC: PolynomialCommitment<PCF, ConstraintF>
     /// An allocated version of `PC::VerifierKey`.
     type VerifierKeyVar: AllocGadget<PC::VerifierKey, ConstraintF>
         + Clone
-        + ToBytesGadget<ConstraintF>
+        + ToBytesBEGadget<ConstraintF>
+        + ToBytesLEGadget<ConstraintF>
         + ToConstraintFieldGadget<ConstraintF>
         + PrepareGadget<Self::PreparedVerifierKeyVar, ConstraintF>;
     /// An allocated version of `PC::PreparedVerifierKey`.
@@ -170,7 +171,8 @@ pub trait PCCheckVar<PCF: PrimeField, PC: PolynomialCommitment<PCF, ConstraintF>
     /// An allocated version of `PC::Commitment`.
     type CommitmentVar: AllocGadget<PC::Commitment, ConstraintF>
         + Clone
-        + ToBytesGadget<ConstraintF>
+        + ToBytesBEGadget<ConstraintF>
+        + ToBytesLEGadget<ConstraintF>
         + ToConstraintFieldGadget<ConstraintF>
         + PrepareGadget<Self::PreparedCommitmentVar, ConstraintF>
         + ToMinimalBitsGadget<ConstraintF>;

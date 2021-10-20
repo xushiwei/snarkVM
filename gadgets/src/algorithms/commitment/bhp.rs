@@ -24,7 +24,7 @@ use crate::{
         integers::integer::Integer,
     },
     ToBitsLEGadget,
-    ToBytesGadget,
+    ToBytesLEGadget,
 };
 use snarkvm_algorithms::{commitment::BHPCommitment, CommitmentScheme};
 use snarkvm_curves::ProjectiveCurve;
@@ -55,13 +55,13 @@ impl<G: ProjectiveCurve, F: PrimeField> AllocGadget<G::ScalarField, F> for BHPRa
     }
 }
 
-impl<G: ProjectiveCurve, F: PrimeField> ToBytesGadget<F> for BHPRandomnessGadget<G> {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.to_bytes(cs)
+impl<G: ProjectiveCurve, F: PrimeField> ToBytesLEGadget<F> for BHPRandomnessGadget<G> {
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.to_bytes_le(cs)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.0.to_bytes_strict(cs)
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.0.to_bytes_le_strict(cs)
     }
 }
 

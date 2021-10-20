@@ -15,7 +15,7 @@
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-    bits::ToBytesGadget,
+    bits::{ToBytesBEGadget, ToBytesLEGadget},
     fields::FpGadget,
     integers::uint::UInt8,
     traits::{
@@ -393,6 +393,13 @@ impl Boolean {
             Boolean::Constant(c) => Some(c),
             Boolean::Is(ref v) => v.get_value(),
             Boolean::Not(ref v) => v.get_value().map(|b| !b),
+        }
+    }
+
+    pub fn is_allocated(&self) -> bool {
+        match self {
+            Boolean::Constant(_) => false,
+            _ => true,
         }
     }
 
@@ -930,8 +937,8 @@ impl<F: Field> ConditionalEqGadget<F> for Boolean {
     }
 }
 
-impl<F: Field> ToBytesGadget<F> for Boolean {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, _cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+impl<F: Field> ToBytesLEGadget<F> for Boolean {
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, _cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         let mut bits = vec![Boolean::constant(false); 7];
         bits.push(*self);
         bits.reverse();
@@ -945,8 +952,28 @@ impl<F: Field> ToBytesGadget<F> for Boolean {
     }
 
     /// Additionally checks if the produced list of booleans is 'valid'.
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.to_bytes(cs)
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.to_bytes_le(cs)
+    }
+}
+
+impl<F: Field> ToBytesBEGadget<F> for Boolean {
+    fn to_bytes_be<CS: ConstraintSystem<F>>(&self, _cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut bits = vec![Boolean::constant(false); 7];
+        bits.push(*self);
+        bits.reverse();
+        let value = self.get_value().map(|val| val as u8);
+        let byte = UInt8 {
+            bits,
+            negated: false,
+            value,
+        };
+        Ok(vec![byte])
+    }
+
+    /// Additionally checks if the produced list of booleans is 'valid'.
+    fn to_bytes_be_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.to_bytes_be(cs)
     }
 }
 
@@ -1027,7 +1054,7 @@ mod test {
         for val in [true, false].iter() {
             let mut cs = TestConstraintSystem::<Fr>::new();
             let a: Boolean = AllocatedBit::alloc(&mut cs, || Ok(*val)).unwrap().into();
-            let bytes = a.to_bytes(&mut cs.ns(|| "ToBytes")).unwrap();
+            let bytes = a.to_bytes_le(&mut cs.ns(|| "ToBytes")).unwrap();
             assert_eq!(bytes.len(), 1);
             let byte = &bytes[0];
             assert_eq!(byte.value.unwrap(), *val as u8);

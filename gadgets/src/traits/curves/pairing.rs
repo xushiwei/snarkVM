@@ -21,7 +21,7 @@ use snarkvm_fields::PrimeField;
 use snarkvm_r1cs::{errors::SynthesisError, ConstraintSystem};
 
 use crate::{
-    bits::ToBytesGadget,
+    bits::ToBytesLEGadget,
     traits::{alloc::AllocGadget, curves::GroupGadget, fields::FieldGadget},
     CondSelectGadget,
     SumGadget,
@@ -32,8 +32,8 @@ use crate::{
 pub trait PairingGadget<E: PairingEngine, F: PrimeField = <E as PairingEngine>::Fq> {
     type G1Gadget: GroupGadget<E::G1Projective, F> + ToConstraintFieldGadget<F> + ToMinimalBitsGadget<F>;
     type G2Gadget: GroupGadget<E::G2Projective, F> + ToConstraintFieldGadget<F> + ToMinimalBitsGadget<F>;
-    type G1PreparedGadget: ToBytesGadget<F> + Clone + Debug;
-    type G2PreparedGadget: ToBytesGadget<F>
+    type G1PreparedGadget: ToBytesLEGadget<F> + Clone + Debug;
+    type G2PreparedGadget: ToBytesLEGadget<F>
         + AllocGadget<<E::G2Affine as PairingCurve>::Prepared, F>
         + CondSelectGadget<F>
         + SumGadget<F>

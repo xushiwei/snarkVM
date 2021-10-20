@@ -42,11 +42,5 @@ pub trait Integer: Debug + Clone {
         first.is_constant() && second.is_constant()
     }
 
-    fn to_bits_le(&self) -> Vec<Boolean>;
-
-    fn to_bits_be(&self) -> Vec<Boolean>;
-
-    fn from_bits_le(bits: &[Boolean]) -> Self;
-
     fn get_value(&self) -> Option<String>;
 }

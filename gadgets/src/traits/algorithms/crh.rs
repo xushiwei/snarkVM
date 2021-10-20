@@ -21,12 +21,11 @@ use snarkvm_fields::PrimeField;
 use snarkvm_r1cs::{errors::SynthesisError, ConstraintSystem};
 
 use crate::{
-    bits::ToBytesGadget,
+    bits::{ToBytesBEGadget, ToBytesLEGadget},
     integers::uint::UInt8,
     traits::{
         alloc::AllocGadget,
         eq::{ConditionalEqGadget, EqGadget},
-        integers::Integer,
         select::CondSelectGadget,
     },
     Boolean,
@@ -37,7 +36,8 @@ use crate::{
 pub trait CRHGadget<H: CRH, F: PrimeField>: AllocGadget<H, F> + Sized + Clone {
     type OutputGadget: ConditionalEqGadget<F>
         + EqGadget<F>
-        + ToBytesGadget<F>
+        + ToBytesBEGadget<F>
+        + ToBytesLEGadget<F>
         + CondSelectGadget<F>
         + AllocGadget<H::Output, F>
         + Debug
@@ -89,12 +89,13 @@ pub trait MaskedCRHGadget<H: CRH, F: PrimeField>: CRHGadget<H, F> {
         let extended_mask = mask
             .iter()
             .flat_map(|m| {
-                m.to_bits_le()
+                m.u8_to_bits_le()
                     .chunks(4)
                     .map(|c| {
                         let new_byte = c.iter().flat_map(|b| vec![*b, b.not()]).collect::<Vec<_>>();
-                        UInt8::from_bits_le(&new_byte)
+                        UInt8::u8_from_bits_le(&new_byte)
                     })
+                    .flatten()
                     .collect::<Vec<_>>()
             })
             .collect::<Vec<_>>();

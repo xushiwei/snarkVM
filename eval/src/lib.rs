@@ -14,5 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod to_bytes;
-pub use to_bytes::*;
+pub mod errors;
+mod evaluator;
+mod operations;
+mod setup;
+mod value;
+
+pub use evaluator::*;
+pub use setup::*;
+pub use value::*;

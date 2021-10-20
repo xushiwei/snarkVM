@@ -22,7 +22,14 @@ use snarkvm_r1cs::{errors::SynthesisError, Assignment, ConstraintSystem, LinearC
 use crate::{
     bits::{
         boolean::{AllocatedBit, Boolean},
+        FromBitsBEGadget,
+        FromBitsLEGadget,
+        FromBytesBEGadget,
+        FromBytesLEGadget,
         ToBitsBEGadget,
+        ToBitsLEGadget,
+        ToBytesBEGadget,
+        ToBytesLEGadget,
     },
     fields::FpGadget,
     traits::{
@@ -31,7 +38,6 @@ use crate::{
         integers::Integer,
         select::CondSelectGadget,
     },
-    ToBitsLEGadget,
     ToConstraintFieldGadget,
     UnsignedIntegerError,
 };
@@ -111,8 +117,127 @@ impl UInt8 {
         // Chunk up slices of 8 bit into bytes.
         Ok(allocated_bits[0..8 * values_len]
             .chunks(8)
-            .map(Self::from_bits_le)
+            .map(Self::u8_from_bits_le)
+            .flatten()
             .collect())
+    }
+
+    /// Returns a vector of `Boolean` gadget bits in little-endian order.
+    /// Gadget implementations and Leo functions should call `ToBitsLEGadget` instead.
+    pub fn u8_to_bits_le(&self) -> Vec<Boolean> {
+        self.bits.clone()
+    }
+
+    /// Returns a `UInt8` gadget from a vector of `Boolean` gadget bits in little-endian order.
+    /// Gadget implementations and Leo functions should call `FromBitsLEGadget` instead.
+    pub fn u8_from_bits_le(bits: &[Boolean]) -> Result<Self, SynthesisError> {
+        if bits.len() != 8 {
+            return Err(SynthesisError::Unsatisfiable);
+        }
+
+        let mut value = Some(0u8);
+        for b in bits.iter().rev() {
+            value.as_mut().map(|v| *v <<= 1);
+
+            match *b {
+                Boolean::Constant(b) => {
+                    if b {
+                        value.as_mut().map(|v| *v |= 1);
+                    }
+                }
+                Boolean::Is(ref b) => match b.get_value() {
+                    Some(true) => {
+                        value.as_mut().map(|v| *v |= 1);
+                    }
+                    Some(false) => {}
+                    None => value = None,
+                },
+                Boolean::Not(ref b) => match b.get_value() {
+                    Some(false) => {
+                        value.as_mut().map(|v| *v |= 1);
+                    }
+                    Some(true) => {}
+                    None => value = None,
+                },
+            }
+        }
+
+        Ok(Self {
+            value: value.map(|x| x as u8),
+            bits: bits.to_vec(),
+            negated: false,
+        })
+    }
+}
+
+impl UInt32 {
+    /// Returns a eight `UInt8` gadget bits in little-endian order from a `UInt32`.
+    /// Gadget implementations and Leo functions should call `FromBitsLEGadget` instead.
+    pub fn u32_to_bytes_le<F: Field, CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        const BYTES_SIZE: usize = 8; // Fix bytes size to 8 for blake2s
+
+        let value_chunks = match self.value.map(|val| {
+            let mut bytes = [0u8; BYTES_SIZE];
+            val.write_le(bytes.as_mut()).unwrap();
+            bytes
+        }) {
+            Some(chunks) => [Some(chunks[0]), Some(chunks[1]), Some(chunks[2]), Some(chunks[3])],
+            None => [None, None, None, None],
+        };
+
+        let bits = self.to_bits_le(&mut cs.ns(|| "to_bits_le"))?;
+        let mut bytes = Vec::with_capacity(bits.len() / 8);
+        for (chunk8, value) in bits.chunks(8).into_iter().zip(value_chunks.iter()) {
+            let byte = UInt8 {
+                bits: chunk8.to_vec(),
+                negated: false,
+                value: *value,
+            };
+            bytes.push(byte);
+        }
+
+        Ok(bytes)
+    }
+
+    /// Returns a `UInt32` gadget from a vector of `Boolean` gadget bits in little-endian order.
+    /// Gadget implementations and Leo functions should call `FromBitsLEGadget` instead.
+    pub fn u32_from_bits_le(bits: &[Boolean]) -> Result<Self, SynthesisError> {
+        if bits.len() != 32 {
+            return Err(SynthesisError::Unsatisfiable);
+        }
+
+        let mut value = Some(0u32);
+        for b in bits.iter().rev() {
+            value.as_mut().map(|v| *v <<= 1);
+
+            match *b {
+                Boolean::Constant(b) => {
+                    if b {
+                        value.as_mut().map(|v| *v |= 1);
+                    }
+                }
+                Boolean::Is(ref b) => match b.get_value() {
+                    Some(true) => {
+                        value.as_mut().map(|v| *v |= 1);
+                    }
+                    Some(false) => {}
+                    None => value = None,
+                },
+                Boolean::Not(ref b) => match b.get_value() {
+                    Some(false) => {
+                        value.as_mut().map(|v| *v |= 1);
+                    }
+                    Some(true) => {}
+                    None => value = None,
+                },
+            }
+        }
+
+        Ok(Self {
+            value: value.map(|x| x as u32),
+            bits: bits.to_vec(),
+            negated: false,
+        })
     }
 }
 

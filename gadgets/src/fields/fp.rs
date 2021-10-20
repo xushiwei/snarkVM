@@ -39,14 +39,14 @@ use crate::{
         boolean::{AllocatedBit, Boolean},
         ToBitsBEGadget,
         ToBitsLEGadget,
-        ToBytesGadget,
+        ToBytesBEGadget,
+        ToBytesLEGadget,
     },
     integers::uint::UInt8,
     traits::{
         alloc::AllocGadget,
         eq::{ConditionalEqGadget, EqGadget, NEqGadget},
         fields::{FieldGadget, ToConstraintFieldGadget},
-        integers::Integer,
         select::{CondSelectGadget, ThreeBitCondNegLookupGadget, TwoBitLookupGadget},
     },
 };
@@ -537,8 +537,8 @@ impl<F: PrimeField> ToBitsLEGadget<F> for AllocatedFp<F> {
     }
 }
 
-impl<F: PrimeField> ToBytesGadget<F> for AllocatedFp<F> {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+impl<F: PrimeField> ToBytesLEGadget<F> for AllocatedFp<F> {
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         let byte_values = match self.value {
             Some(value) => to_bytes_le![&value.to_repr()]?
                 .into_iter()
@@ -573,18 +573,32 @@ impl<F: PrimeField> ToBytesGadget<F> for AllocatedFp<F> {
         Ok(bytes)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        let bytes = self.to_bytes(&mut cs)?;
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, mut cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let bytes = self.to_bytes_le(&mut cs)?;
         Boolean::enforce_in_field::<_, _, F>(
             &mut cs,
             &bytes
                 .iter()
-                .flat_map(|byte_gadget| byte_gadget.to_bits_le())
+                .flat_map(|byte_gadget| byte_gadget.u8_to_bits_le())
                 // This reverse maps the bits into big-endian form, as required by `enforce_in_field`.
                 .rev()
                 .collect::<Vec<_>>(),
         )?;
 
+        Ok(bytes)
+    }
+}
+
+impl<F: PrimeField> ToBytesBEGadget<F> for AllocatedFp<F> {
+    fn to_bytes_be<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut bytes = self.to_bytes_le(cs)?;
+        bytes.reverse();
+        Ok(bytes)
+    }
+
+    fn to_bytes_be_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut bytes = self.to_bytes_le_strict(cs)?;
+        bytes.reverse();
         Ok(bytes)
     }
 }
@@ -1153,18 +1167,40 @@ impl<F: PrimeField> ToBitsLEGadget<F> for FpGadget<F> {
     }
 }
 
-impl<F: PrimeField> ToBytesGadget<F> for FpGadget<F> {
-    fn to_bytes<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+impl<F: PrimeField> ToBytesLEGadget<F> for FpGadget<F> {
+    fn to_bytes_le<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         match self {
             Self::Constant(c) => Ok(UInt8::constant_vec(&to_bytes_le![c].unwrap())),
-            Self::Variable(v) => v.to_bytes(cs),
+            Self::Variable(v) => v.to_bytes_le(cs),
         }
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+    fn to_bytes_le_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         match self {
             Self::Constant(c) => Ok(UInt8::constant_vec(&to_bytes_le![c].unwrap())),
-            Self::Variable(v) => v.to_bytes_strict(cs),
+            Self::Variable(v) => v.to_bytes_le_strict(cs),
+        }
+    }
+}
+
+impl<F: PrimeField> ToBytesBEGadget<F> for FpGadget<F> {
+    fn to_bytes_be<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        match self {
+            Self::Constant(c) => {
+                let bytes = &to_bytes_le![c].unwrap().into_iter().rev().collect::<Vec<u8>>();
+                Ok(UInt8::constant_vec(bytes))
+            }
+            Self::Variable(v) => v.to_bytes_be(cs),
+        }
+    }
+
+    fn to_bytes_be_strict<CS: ConstraintSystem<F>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        match self {
+            Self::Constant(c) => {
+                let bytes = &to_bytes_le![c].unwrap().into_iter().rev().collect::<Vec<u8>>();
+                Ok(UInt8::constant_vec(bytes))
+            }
+            Self::Variable(v) => v.to_bytes_be_strict(cs),
         }
     }
 }

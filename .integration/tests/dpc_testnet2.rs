@@ -33,6 +33,7 @@ fn test_testnet2_inner_circuit_id_sanity_check() {
     assert_eq!(expected_inner_circuit_id, candidate_inner_circuit_id);
 }
 
+#[ignore]
 #[test]
 fn dpc_testnet2_integration_test() {
     let mut rng = &mut ChaChaRng::seed_from_u64(1231275789u64);

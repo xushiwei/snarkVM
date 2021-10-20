@@ -20,7 +20,7 @@ use snarkvm_algorithms::traits::EncryptionScheme;
 use snarkvm_r1cs::{errors::SynthesisError, ConstraintSystem};
 
 use crate::{
-    bits::ToBytesGadget,
+    bits::{ToBytesBEGadget, ToBytesLEGadget},
     traits::{alloc::AllocGadget, eq::EqGadget},
     UInt8,
 };
@@ -28,13 +28,15 @@ use snarkvm_fields::PrimeField;
 
 pub trait EncryptionGadget<E: EncryptionScheme, F: PrimeField>: AllocGadget<E, F> + Clone {
     type PrivateKeyGadget: AllocGadget<<E as EncryptionScheme>::PrivateKey, F>
-        + ToBytesGadget<F>
+        + ToBytesBEGadget<F>
+        + ToBytesLEGadget<F>
         + Clone
         + Sized
         + Debug;
     type PublicKeyGadget: AllocGadget<<E as EncryptionScheme>::PublicKey, F>
         + EqGadget<F>
-        + ToBytesGadget<F>
+        + ToBytesBEGadget<F>
+        + ToBytesLEGadget<F>
         + Clone
         + Sized
         + Debug;

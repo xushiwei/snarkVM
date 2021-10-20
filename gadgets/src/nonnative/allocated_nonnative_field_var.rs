@@ -21,7 +21,7 @@ use std::{
 };
 
 use crate::{
-    bits::{Boolean, ToBitsBEGadget, ToBitsLEGadget, ToBytesGadget},
+    bits::{Boolean, ToBitsBEGadget, ToBitsLEGadget, ToBytesBEGadget, ToBytesLEGadget},
     fields::FpGadget,
     integers::uint::UInt8,
     overhead,
@@ -29,7 +29,6 @@ use crate::{
         alloc::AllocGadget,
         eq::EqGadget,
         fields::FieldGadget,
-        integers::integer::Integer,
         select::{CondSelectGadget, ThreeBitCondNegLookupGadget, TwoBitLookupGadget},
     },
 };
@@ -657,27 +656,45 @@ impl<TargetField: PrimeField, BaseField: PrimeField> ToBitsLEGadget<BaseField>
     }
 }
 
-impl<TargetField: PrimeField, BaseField: PrimeField> ToBytesGadget<BaseField>
+impl<TargetField: PrimeField, BaseField: PrimeField> ToBytesLEGadget<BaseField>
     for AllocatedNonNativeFieldVar<TargetField, BaseField>
 {
-    fn to_bytes<CS: ConstraintSystem<BaseField>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+    fn to_bytes_le<CS: ConstraintSystem<BaseField>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
         let bits = self.to_bits_le(cs)?;
 
-        let mut bytes = Vec::<UInt8>::new();
-        bits.chunks(8).for_each(|bits_per_byte| {
-            let mut bits_per_byte: Vec<Boolean> = bits_per_byte.to_vec();
-            if bits_per_byte.len() < 8 {
-                bits_per_byte.resize_with(8, || Boolean::constant(false));
-            }
+        let bytes = bits
+            .chunks(8)
+            .into_iter()
+            .map(|bits_per_byte| {
+                let mut bits_per_byte: Vec<Boolean> = bits_per_byte.to_vec();
+                if bits_per_byte.len() < 8 {
+                    bits_per_byte.resize_with(8, || Boolean::constant(false));
+                }
 
-            bytes.push(UInt8::from_bits_le(&bits_per_byte));
-        });
+                UInt8::u8_from_bits_le(&bits_per_byte)
+            })
+            .flatten()
+            .collect::<Vec<UInt8>>();
 
         Ok(bytes)
     }
 
-    fn to_bytes_strict<CS: ConstraintSystem<BaseField>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
-        self.to_bytes(cs)
+    fn to_bytes_le_strict<CS: ConstraintSystem<BaseField>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.to_bytes_le(cs)
+    }
+}
+
+impl<TargetField: PrimeField, BaseField: PrimeField> ToBytesBEGadget<BaseField>
+    for AllocatedNonNativeFieldVar<TargetField, BaseField>
+{
+    fn to_bytes_be<CS: ConstraintSystem<BaseField>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        let mut bytes = self.to_bytes_le(cs)?;
+        bytes.reverse();
+        Ok(bytes)
+    }
+
+    fn to_bytes_be_strict<CS: ConstraintSystem<BaseField>>(&self, cs: CS) -> Result<Vec<UInt8>, SynthesisError> {
+        self.to_bytes_be(cs)
     }
 }
 
