@@ -660,7 +660,10 @@ impl<'a, F: PrimeField, G: GroupType<F>> EvaluatorState<'a, F, G> {
             Value::Address(bytes) => ConstrainedValue::Address(Address::constant(&bytes[..])?),
             Value::Boolean(value) => ConstrainedValue::Boolean(Boolean::Constant(*value)),
             Value::Field(limbs) => ConstrainedValue::Field(FieldType::constant(cs, &limbs)?),
-            Value::Char(c) => ConstrainedValue::Char(Char::constant(cs, *c)?),
+            Value::Char(c) => ConstrainedValue::Char(Char::constant(
+                cs,
+                u32::from_le_bytes(c.clone().try_into().unwrap_or([253, 255, 0, 0])),
+            )?),
             Value::Group(g) => ConstrainedValue::Group(G::constant(g)?),
             Value::Integer(i) => ConstrainedValue::Integer(Integer::constant(i)?),
             Value::Array(items) => {

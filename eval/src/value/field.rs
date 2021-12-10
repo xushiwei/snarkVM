@@ -30,8 +30,8 @@ use snarkvm_gadgets::{
 };
 use snarkvm_ir::{Field, Value};
 use snarkvm_r1cs::{ConstraintSystem, SynthesisError};
-use snarkvm_utilities::BigInteger;
-use std::{borrow::Borrow, cmp::Ordering, convert::TryInto};
+use snarkvm_utilities::FromBytes;
+use std::{borrow::Borrow, cmp::Ordering};
 
 use crate::{errors::FieldError, ConstrainedValue, GroupType};
 
@@ -46,13 +46,10 @@ impl<F: PrimeField> FieldType<F> {
 
     /// Returns a new `FieldType` from the given `String` or returns a `FieldError`.
     pub fn constant<CS: ConstraintSystem<F>>(mut cs: CS, number: &Field) -> Result<Self, FieldError> {
-        let value = F::from_repr(<F as PrimeField>::BigInteger::from_slice(
-            &number
-                .values
-                .chunks(8)
-                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
-                .collect::<Vec<u64>>(),
-        ))
+        let value = F::from_repr(
+            <F as PrimeField>::BigInteger::from_bytes_le(&number.values)
+                .map_err(|_| FieldError::invalid_field(format!("{}", number)))?,
+        )
         .ok_or_else(|| FieldError::invalid_field(format!("{}", number)))?;
 
         let mut value = FpGadget::alloc_constant(&mut cs, || Ok(value))
@@ -146,15 +143,7 @@ impl<F: PrimeField> FieldType<F> {
             return Err(FieldError::invalid_field(value.to_string()));
         };
 
-        let mut field = allocate_field(
-            cs,
-            name,
-            &value
-                .values
-                .chunks(8)
-                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
-                .collect::<Vec<u64>>(),
-        )?;
+        let mut field = allocate_field(cs, name, &value.values[..])?;
         if value.negate {
             field = field.negate(cs)?;
         }
@@ -286,10 +275,13 @@ impl<F: PrimeField> std::fmt::Display for FieldType<F> {
 pub(crate) fn allocate_field<F: PrimeField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     name: &str,
-    raw_value: &[u64],
+    raw_value: &[u8],
 ) -> Result<FieldType<F>, FieldError> {
-    let value = F::from_repr(<F as PrimeField>::BigInteger::from_slice(raw_value))
-        .ok_or_else(|| FieldError::invalid_field(format!("{:?}", raw_value)))?;
+    let value = F::from_repr(
+        <F as PrimeField>::BigInteger::from_bytes_le(raw_value)
+            .map_err(|_| FieldError::invalid_field(format!("{:?}", raw_value)))?,
+    )
+    .ok_or_else(|| FieldError::invalid_field(format!("{:?}", raw_value)))?;
 
     FpGadget::alloc(cs, || Ok(value))
         .map(FieldType)
