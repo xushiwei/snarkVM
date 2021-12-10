@@ -277,11 +277,13 @@ pub(crate) fn allocate_field<F: PrimeField, CS: ConstraintSystem<F>>(
     name: &str,
     raw_value: &[u8],
 ) -> Result<FieldType<F>, FieldError> {
+    dbg!("yo");
     let value = F::from_repr(
         <F as PrimeField>::BigInteger::from_bytes_le(raw_value)
             .map_err(|_| FieldError::invalid_field(format!("{:?}", raw_value)))?,
     )
     .ok_or_else(|| FieldError::invalid_field(format!("{:?}", raw_value)))?;
+    dbg!("no");
 
     FpGadget::alloc(cs, || Ok(value))
         .map(FieldType)
