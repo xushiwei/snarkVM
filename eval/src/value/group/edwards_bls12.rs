@@ -44,6 +44,7 @@ use snarkvm_utilities::{BigInteger, BigInteger256};
 
 use core::{
     borrow::Borrow,
+    convert::TryInto,
     ops::{Add, Mul, Neg, Sub},
 };
 
@@ -148,8 +149,14 @@ impl EdwardsGroupType {
             Ok(EdwardsAffine::zero())
         } else {
             let one = edwards_affine_one();
-            let mut number_value = Fp256::from_repr(BigInteger256::from_slice(&number.values[..]))
-                .ok_or_else(|| GroupError::n_group(format!("{:?}", number)))?;
+            let mut number_value = Fp256::from_repr(BigInteger256::from_slice(
+                &number
+                    .values
+                    .chunks(8)
+                    .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                    .collect::<Vec<u64>>(),
+            ))
+            .ok_or_else(|| GroupError::n_group(format!("{:?}", number)))?;
             if number.negate {
                 number_value = number_value.neg();
             }
@@ -182,8 +189,14 @@ impl EdwardsGroupType {
     }
 
     pub fn edwards_affine_from_x(x_info: &Field, greatest: Option<bool>) -> Result<EdwardsAffine, GroupError> {
-        let mut x = Fp256::from_repr(BigInteger256::from_slice(&x_info.values[..]))
-            .ok_or_else(|| GroupError::x_invalid(format!("{}", x_info)))?;
+        let mut x = Fp256::from_repr(BigInteger256::from_slice(
+            &x_info
+                .values
+                .chunks(8)
+                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .collect::<Vec<u64>>(),
+        ))
+        .ok_or_else(|| GroupError::x_invalid(format!("{}", x_info)))?;
         if x_info.negate {
             x = x.neg();
         }
@@ -210,8 +223,14 @@ impl EdwardsGroupType {
     }
 
     pub fn edwards_affine_from_y(y_info: &Field, greatest: Option<bool>) -> Result<EdwardsAffine, GroupError> {
-        let mut y = Fp256::from_repr(BigInteger256::from_slice(&y_info.values[..]))
-            .ok_or_else(|| GroupError::y_invalid(format!("{}", y_info)))?;
+        let mut y = Fp256::from_repr(BigInteger256::from_slice(
+            &y_info
+                .values
+                .chunks(8)
+                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .collect::<Vec<u64>>(),
+        ))
+        .ok_or_else(|| GroupError::y_invalid(format!("{}", y_info)))?;
         if y_info.negate {
             y = y.neg();
         }
@@ -238,10 +257,22 @@ impl EdwardsGroupType {
     }
 
     pub fn edwards_affine_from_pair(x_info: &Field, y_info: &Field) -> Result<EdwardsAffine, GroupError> {
-        let mut x = Fp256::from_repr(BigInteger256::from_slice(&x_info.values[..]))
-            .ok_or_else(|| GroupError::x_invalid(format!("{}", x_info)))?;
-        let mut y = Fp256::from_repr(BigInteger256::from_slice(&y_info.values[..]))
-            .ok_or_else(|| GroupError::y_invalid(format!("{}", y_info)))?;
+        let mut x = Fp256::from_repr(BigInteger256::from_slice(
+            &x_info
+                .values
+                .chunks(8)
+                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .collect::<Vec<u64>>(),
+        ))
+        .ok_or_else(|| GroupError::x_invalid(format!("{}", x_info)))?;
+        let mut y = Fp256::from_repr(BigInteger256::from_slice(
+            &y_info
+                .values
+                .chunks(8)
+                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .collect::<Vec<u64>>(),
+        ))
+        .ok_or_else(|| GroupError::y_invalid(format!("{}", y_info)))?;
         if x_info.negate {
             x = x.neg();
         }

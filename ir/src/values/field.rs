@@ -24,7 +24,7 @@ use serde::Serialize;
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Field {
     pub negate: bool,
-    pub values: Vec<u64>,
+    pub values: Vec<u8>,
 }
 
 impl fmt::Display for Field {

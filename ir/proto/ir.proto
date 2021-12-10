@@ -94,7 +94,7 @@ message Char {
 
 message Field {
     bool negate = 1;
-    repeated fixed64 values = 2;
+    bytes values = 2;
 }
 
 message Operand {

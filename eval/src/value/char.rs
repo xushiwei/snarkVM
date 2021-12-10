@@ -40,7 +40,7 @@ impl<F: PrimeField> Char<F> {
         Ok(Self {
             character,
             field: FieldType::constant(cs, &Field {
-                values: vec![character as u64],
+                values: vec![character as u8],
                 negate: false,
             })?,
         })
