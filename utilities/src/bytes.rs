@@ -108,11 +108,8 @@ macro_rules! to_bytes_for_int_array {
                 let mut res: [$int; N] = [0; N];
                 for num in res.iter_mut() {
                     let mut bytes = [0u8; core::mem::size_of::<$int>()];
-                    dbg!(&bytes);
                     reader.read_exact(&mut bytes)?;
-                    dbg!(&bytes);
                     *num = <$int>::from_le_bytes(bytes);
-                    dbg!(num);
                 }
                 Ok(res)
             }
