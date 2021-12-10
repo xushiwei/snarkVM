@@ -45,6 +45,7 @@ impl FieldError {
     }
 
     pub fn invalid_field(actual: String) -> Self {
+        panic!("expected field element input type, found `{}`", actual);
         let message = format!("expected field element input type, found `{}`", actual);
 
         Self::new(message)
