@@ -60,10 +60,12 @@ impl<F: PrimeField> Char<F> {
             return Err(CharError::invalid_char(value.to_string()));
         };
 
-        let field = super::field::allocate_field(cs, name, &value[..])?;
+        let mut field_bytes = value.clone();
+        field_bytes.resize(8, 0);
+        let field = super::field::allocate_field(cs, name, &field_bytes[..])?;
 
         Ok(ConstrainedValue::Char(Char {
-            character: u64::from_le_bytes(value.try_into().unwrap_or([253, 255, 0, 0, 0, 0, 0, 0])) as u32,
+            character: u32::from_le_bytes(value.try_into().unwrap_or([253, 255, 0, 0])),
             field,
         }))
     }
