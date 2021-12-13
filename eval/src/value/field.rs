@@ -283,8 +283,14 @@ pub(crate) fn allocate_field<F: PrimeField, CS: ConstraintSystem<F>>(
     name: &str,
     raw_value: &[u8],
 ) -> Result<FieldType<F>, FieldError> {
-    dbg!("{}", raw_value);
-    dbg!("{:?}", F::from_bytes_le(raw_value));
+    dbg!(raw_value);
+    dbg!(F::from_bytes_le(raw_value));
+    dbg!(
+        &raw_value
+            .chunks(8)
+            .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("invalid u64")))
+            .collect::<Vec<u64>>()
+    );
     let value = F::from_repr(<F as PrimeField>::BigInteger::from_slice(
         &raw_value
             .chunks(8)
