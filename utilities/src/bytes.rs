@@ -105,6 +105,8 @@ macro_rules! to_bytes_for_int_array {
         impl<const N: usize> FromBytes for [$int; N] {
             #[inline]
             fn read_le<R: Read>(mut reader: R) -> IoResult<Self> {
+                dbg!(N);
+                dbg!(stringify!($int));
                 let mut res: [$int; N] = [0; N];
                 for num in res.iter_mut() {
                     let mut bytes = [0u8; core::mem::size_of::<$int>()];
