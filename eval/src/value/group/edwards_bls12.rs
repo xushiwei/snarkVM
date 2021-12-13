@@ -153,7 +153,7 @@ impl EdwardsGroupType {
                 &number
                     .values
                     .chunks(8)
-                    .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                    .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
                     .collect::<Vec<u64>>(),
             ))
             .ok_or_else(|| GroupError::n_group(format!("{:?}", number)))?;
@@ -193,7 +193,7 @@ impl EdwardsGroupType {
             &x_info
                 .values
                 .chunks(8)
-                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
                 .collect::<Vec<u64>>(),
         ))
         .ok_or_else(|| GroupError::x_invalid(format!("{}", x_info)))?;
@@ -227,7 +227,7 @@ impl EdwardsGroupType {
             &y_info
                 .values
                 .chunks(8)
-                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
                 .collect::<Vec<u64>>(),
         ))
         .ok_or_else(|| GroupError::y_invalid(format!("{}", y_info)))?;
@@ -261,7 +261,7 @@ impl EdwardsGroupType {
             &x_info
                 .values
                 .chunks(8)
-                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
                 .collect::<Vec<u64>>(),
         ))
         .ok_or_else(|| GroupError::x_invalid(format!("{}", x_info)))?;
@@ -269,7 +269,7 @@ impl EdwardsGroupType {
             &y_info
                 .values
                 .chunks(8)
-                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("pain")))
+                .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
                 .collect::<Vec<u64>>(),
         ))
         .ok_or_else(|| GroupError::y_invalid(format!("{}", y_info)))?;
