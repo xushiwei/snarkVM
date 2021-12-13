@@ -63,7 +63,7 @@ impl<F: PrimeField> Char<F> {
         let field = super::field::allocate_field(cs, name, &value[..])?;
 
         Ok(ConstrainedValue::Char(Char {
-            character: u32::from_le_bytes(value.try_into().unwrap_or([253, 255, 0, 0])),
+            character: u64::from_le_bytes(value.try_into().unwrap_or([253, 255, 0, 0, 0, 0, 0, 0])) as u32,
             field,
         }))
     }
