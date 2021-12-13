@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
-use std::{
-    convert::{TryFrom, TryInto},
-    fmt,
-};
+use std::{convert::TryFrom, fmt};
 
 use crate::{ir, Type};
 
@@ -90,7 +87,7 @@ pub enum Value {
     Address(Vec<u8>),
     Boolean(bool),
     Field(Field),
-    Char(Vec<u8>),
+    Char(u32),
     Group(Group),
     Integer(Integer),
     Array(Vec<Value>),
@@ -112,7 +109,7 @@ impl fmt::Display for Value {
             Value::Char(c) => write!(
                 f,
                 "'{}'",
-                std::char::from_u32(u32::from_le_bytes(c.clone().try_into().unwrap_or([253, 255, 0, 0]))) // Replacement char as u8 bytes le
+                std::char::from_u32(*c)
                     .unwrap_or(std::char::REPLACEMENT_CHARACTER)
                     .escape_default()
             ),

@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
-use std::convert::TryInto;
-
 use snarkvm_fields::PrimeField;
 use snarkvm_gadgets::{
     boolean::Boolean,
@@ -60,12 +58,11 @@ impl<F: PrimeField> Char<F> {
             return Err(CharError::invalid_char(value.to_string()));
         };
 
-        let mut field_bytes = value.clone();
-        field_bytes.resize(8, 0);
-        let field = super::field::allocate_field(cs, name, &field_bytes[..])?;
+        let field_bytes = value as u64;
+        let field = super::field::allocate_field(cs, name, &field_bytes.to_le_bytes())?;
 
         Ok(ConstrainedValue::Char(Char {
-            character: u32::from_le_bytes(value.try_into().unwrap_or([253, 255, 0, 0])),
+            character: value,
             field,
         }))
     }

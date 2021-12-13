@@ -89,7 +89,7 @@ message String {
 }
 
 message Char {
-    bytes char = 1;
+    uint32 char = 1;
 }
 
 message Field {
