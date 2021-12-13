@@ -123,7 +123,7 @@ impl<F: PrimeField, G: GroupType<F>> fmt::Display for ConstrainedValue<F, G> {
             ),
             ConstrainedValue::Char(ref value) => write!(f, "{}", value),
             ConstrainedValue::Field(ref value) => write!(f, "{}", value),
-            ConstrainedValue::Group(ref value) => write!(f, "{:?}", value),
+            ConstrainedValue::Group(ref value) => write!(f, "{}", value),
             ConstrainedValue::Integer(ref value) => write!(f, "{}", value),
 
             // Data type wrappers
