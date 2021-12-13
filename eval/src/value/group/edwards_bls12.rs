@@ -145,18 +145,18 @@ impl EdwardsGroupType {
     }
 
     pub fn edwards_affine_from_single(number: &Field) -> Result<EdwardsAffine, GroupError> {
-        if number.values.iter().all(|x| *x == 0) {
+        let field_u64_slice = number
+            .values
+            .chunks(8)
+            .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
+            .collect::<Vec<u64>>();
+
+        if field_u64_slice.iter().all(|x| *x == 0) {
             Ok(EdwardsAffine::zero())
         } else {
             let one = edwards_affine_one();
-            let mut number_value = Fp256::from_repr(BigInteger256::from_slice(
-                &number
-                    .values
-                    .chunks(8)
-                    .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
-                    .collect::<Vec<u64>>(),
-            ))
-            .ok_or_else(|| GroupError::n_group(format!("{:?}", number)))?;
+            let mut number_value = Fp256::from_repr(BigInteger256::from_slice(&field_u64_slice))
+                .ok_or_else(|| GroupError::n_group(format!("{:?}", number)))?;
             if number.negate {
                 number_value = number_value.neg();
             }
