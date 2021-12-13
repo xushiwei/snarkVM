@@ -30,7 +30,8 @@ use snarkvm_gadgets::{
 };
 use snarkvm_ir::{Field, Value};
 use snarkvm_r1cs::{ConstraintSystem, SynthesisError};
-use std::{borrow::Borrow, cmp::Ordering};
+use snarkvm_utilities::BigInteger;
+use std::{borrow::Borrow, cmp::Ordering, convert::TryInto};
 
 use crate::{errors::FieldError, ConstrainedValue, GroupType};
 
@@ -45,7 +46,14 @@ impl<F: PrimeField> FieldType<F> {
 
     /// Returns a new `FieldType` from the given `String` or returns a `FieldError`.
     pub fn constant<CS: ConstraintSystem<F>>(mut cs: CS, number: &Field) -> Result<Self, FieldError> {
-        let value = F::from_bytes_le(&number.values).map_err(|_| FieldError::invalid_field(format!("{}", number)))?;
+        let value = F::from_repr(<F as PrimeField>::BigInteger::from_slice(
+            &number
+                .values
+                .chunks(8)
+                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("invalid u64")))
+                .collect::<Vec<u64>>(),
+        ))
+        .ok_or_else(|| FieldError::invalid_field(format!("{}", number)))?;
 
         let mut value = FpGadget::alloc_constant(&mut cs, || Ok(value))
             .map_err(|_| FieldError::invalid_field(format!("{}", number)))?;
@@ -138,7 +146,7 @@ impl<F: PrimeField> FieldType<F> {
             return Err(FieldError::invalid_field(value.to_string()));
         };
 
-        let mut field = allocate_field(cs, name, &value.values[..])?;
+        let mut field = allocate_field(cs, name, &value.values)?;
         if value.negate {
             field = field.negate(cs)?;
         }
@@ -272,7 +280,13 @@ pub(crate) fn allocate_field<F: PrimeField, CS: ConstraintSystem<F>>(
     name: &str,
     raw_value: &[u8],
 ) -> Result<FieldType<F>, FieldError> {
-    let value = F::from_bytes_le(raw_value).map_err(|_| FieldError::invalid_field(format!("{:?}", raw_value)))?;
+    let value = F::from_repr(<F as PrimeField>::BigInteger::from_slice(
+        &raw_value
+            .chunks(8)
+            .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("invalid u64")))
+            .collect::<Vec<u64>>(),
+    ))
+    .ok_or_else(|| FieldError::invalid_field(format!("{:?}", raw_value)))?;
 
     FpGadget::alloc(cs, || Ok(value))
         .map(FieldType)
