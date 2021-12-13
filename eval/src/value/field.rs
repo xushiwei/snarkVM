@@ -50,7 +50,7 @@ impl<F: PrimeField> FieldType<F> {
             &number
                 .values
                 .chunks(8)
-                .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("invalid u64")))
+                .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
                 .collect::<Vec<u64>>(),
         ))
         .ok_or_else(|| FieldError::invalid_field(format!("{}", number)))?;
@@ -288,13 +288,13 @@ pub(crate) fn allocate_field<F: PrimeField, CS: ConstraintSystem<F>>(
     dbg!(
         &raw_value
             .chunks(8)
-            .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("invalid u64")))
+            .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
             .collect::<Vec<u64>>()
     );
     let value = F::from_repr(<F as PrimeField>::BigInteger::from_slice(
         &raw_value
             .chunks(8)
-            .map(|chunk| u64::from_be_bytes(chunk.try_into().expect("invalid u64")))
+            .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
             .collect::<Vec<u64>>(),
     ))
     .ok_or_else(|| FieldError::invalid_field(format!("{:?}", raw_value)))?;
