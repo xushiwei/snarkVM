@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
-use std::fmt;
+use std::{convert::TryInto, fmt};
 
 use crate::ir;
 
@@ -38,14 +38,18 @@ impl Field {
     pub(crate) fn decode(from: ir::Field) -> Self {
         Self {
             negate: from.negate,
-            values: from.values,
+            values: from
+                .values
+                .chunks(8)
+                .map(|chunk| u64::from_le_bytes(chunk.try_into().expect("invalid u64")))
+                .collect::<Vec<u64>>(),
         }
     }
 
     pub(crate) fn encode(&self) -> ir::Field {
         ir::Field {
             negate: self.negate,
-            values: self.values.clone(),
+            values: self.values.iter().map(|uint| uint.to_le_bytes()).flatten().collect(),
         }
     }
 }
