@@ -32,7 +32,7 @@ impl<M: Memory> Operation for Sub<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "sub"
     }
 
@@ -58,7 +58,7 @@ impl<M: Memory> Operation for Sub<M> {
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Field(a - b),
             (Literal::Group(a), Literal::Group(b)) => Literal::Group(a - b),
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(self.operation.destination(), result);

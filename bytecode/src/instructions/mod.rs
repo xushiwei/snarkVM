@@ -67,6 +67,7 @@ use snarkvm_circuits::ParserResult;
 use snarkvm_utilities::{error, FromBytes, ToBytes};
 
 use core::fmt;
+use enum_index::EnumIndex;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -75,6 +76,10 @@ use nom::{
 };
 use std::io::{Read, Result as IoResult, Write};
 
+// TODO (@pranav) There appears to be a bug with IndexEnum when applying the proc macro to parse
+//  the below enum variants. The issue may be related to the use of type parameters in enum
+//  variants as the error reports: comparison operators cannot be chained.
+#[derive(EnumIndex)]
 pub enum Instruction<M: Memory> {
     /// Adds `first` with `second`, storing the outcome in `destination`.
     Add(Add<M>),
@@ -111,25 +116,32 @@ pub enum Instruction<M: Memory> {
 }
 
 impl<M: Memory> Instruction<M> {
-    /// Returns the opcode of the instruction.
+    /// Returns the opcode for the instruction
     #[inline]
-    pub(crate) fn opcode(&self) -> &'static str {
+    pub(crate) fn opcode(&self) -> u16 {
+        self.enum_index() as u16
+    }
+
+    /// Returns the mnemonic for the instruction.
+    #[inline]
+    pub(crate) fn mnemonic(&self) -> &'static str {
         match self {
-            Self::Add(..) => Add::<M>::opcode(),
-            Self::Double(..) => Double::<M>::opcode(),
-            Self::Equal(..) => Equal::<M>::opcode(),
-            Self::GreaterThan(..) => GreaterThan::<M>::opcode(),
-            Self::GreaterThanOrEqual(..) => GreaterThanOrEqual::<M>::opcode(),
-            Self::Inv(..) => Inv::<M>::opcode(),
-            Self::LessThan(..) => LessThan::<M>::opcode(),
-            Self::LessThanOrEqual(..) => LessThanOrEqual::<M>::opcode(),
-            Self::Mul(..) => Mul::<M>::opcode(),
-            Self::Neg(..) => Neg::<M>::opcode(),
-            Self::NotEqual(..) => NotEqual::<M>::opcode(),
-            Self::Pow(..) => Pow::<M>::opcode(),
-            Self::Square(..) => Square::<M>::opcode(),
-            Self::Sub(..) => Sub::<M>::opcode(),
-            Self::Ternary(..) => Ternary::<M>::opcode(),
+            Self::Add(..) => Add::<M>::mnemonic(),
+            Self::Div(..) => Div::<M>::mnemonic(),
+            Self::Double(..) => Double::<M>::mnemonic(),
+            Self::Equal(..) => Equal::<M>::mnemonic(),
+            Self::GreaterThan(..) => GreaterThan::<M>::mnemonic(),
+            Self::GreaterThanOrEqual(..) => GreaterThanOrEqual::<M>::mnemonic(),
+            Self::Inv(..) => Inv::<M>::mnemonic(),
+            Self::LessThan(..) => LessThan::<M>::mnemonic(),
+            Self::LessThanOrEqual(..) => LessThanOrEqual::<M>::mnemonic(),
+            Self::Mul(..) => Mul::<M>::mnemonic(),
+            Self::Neg(..) => Neg::<M>::mnemonic(),
+            Self::NotEqual(..) => NotEqual::<M>::mnemonic(),
+            Self::Pow(..) => Pow::<M>::mnemonic(),
+            Self::Square(..) => Square::<M>::mnemonic(),
+            Self::Sub(..) => Sub::<M>::mnemonic(),
+            Self::Ternary(..) => Ternary::<M>::mnemonic(),
         }
     }
 
@@ -164,8 +176,8 @@ impl<M: Memory> Instruction<M> {
         // Parse the instruction from the string.
         let (string, instruction) = alt((
             // Note that order of the individual parsers matters.
-            preceded(pair(tag(Add::<M>::opcode()), tag(" ")), map(|s| Add::parse(s, memory.clone()), Into::into)),
-            preceded(pair(tag(Sub::<M>::opcode()), tag(" ")), map(|s| Sub::parse(s, memory.clone()), Into::into)),
+            preceded(pair(tag(Add::<M>::mnemonic()), tag(" ")), map(|s| Add::parse(s, memory.clone()), Into::into)),
+            preceded(pair(tag(Sub::<M>::mnemonic()), tag(" ")), map(|s| Sub::parse(s, memory.clone()), Into::into)),
         ))(string)?;
 
         // Parse the semicolon from the string.
@@ -178,31 +190,46 @@ impl<M: Memory> Instruction<M> {
 impl<M: Memory> fmt::Display for Instruction<M> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Add(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Div(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Double(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Equal(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::GreaterThan(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::GreaterThanOrEqual(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Inv(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::LessThan(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::LessThanOrEqual(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Mul(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Neg(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::NotEqual(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Pow(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Square(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Sub(instruction) => write!(f, "{} {};", self.opcode(), instruction),
-            Self::Ternary(instruction) => write!(f, "{} {};", self.opcode(), instruction),
+            Self::Add(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Div(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Double(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Equal(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::GreaterThan(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::GreaterThanOrEqual(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Inv(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::LessThan(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::LessThanOrEqual(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Mul(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Neg(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::NotEqual(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Pow(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Square(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Sub(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Ternary(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
         }
     }
 }
 
+// TODO (@pranav) Hard coding constants is not maintainable.
 impl<M: Memory> FromBytes for Instruction<M> {
     fn read_le<R: Read>(mut reader: R) -> IoResult<Self> {
         match u16::read_le(&mut reader) {
             Ok(0) => Ok(Self::Add(Add::read_le(&mut reader)?)),
-            Ok(2) => Ok(Self::Sub(Sub::read_le(&mut reader)?)),
+            Ok(1) => Ok(Self::Div(Div::read_le(&mut reader)?)),
+            Ok(2) => Ok(Self::Double(Double::read_le(&mut reader)?)),
+            Ok(3) => Ok(Self::Equal(Equal::read_le(&mut reader)?)),
+            Ok(4) => Ok(Self::GreaterThan(GreaterThan::read_le(&mut reader)?)),
+            Ok(5) => Ok(Self::GreaterThanOrEqual(GreaterThanOrEqual::read_le(&mut reader)?)),
+            Ok(6) => Ok(Self::Inv(Inv::read_le(&mut reader)?)),
+            Ok(7) => Ok(Self::LessThan(LessThan::read_le(&mut reader)?)),
+            Ok(8) => Ok(Self::LessThanOrEqual(LessThanOrEqual::read_le(&mut reader)?)),
+            Ok(9) => Ok(Self::Mul(Mul::read_le(&mut reader)?)),
+            Ok(10) => Ok(Self::Neg(Neg::read_le(&mut reader)?)),
+            Ok(11) => Ok(Self::NotEqual(NotEqual::read_le(&mut reader)?)),
+            Ok(12) => Ok(Self::Pow(Pow::read_le(&mut reader)?)),
+            Ok(13) => Ok(Self::Square(Square::read_le(&mut reader)?)),
+            Ok(14) => Ok(Self::Sub(Sub::read_le(&mut reader)?)),
+            Ok(15) => Ok(Self::Ternary(Ternary::read_le(&mut reader)?)),
             Ok(code) => Err(error(format!("FromBytes failed to parse an instruction of code {code}"))),
             Err(err) => Err(err),
         }
@@ -211,15 +238,24 @@ impl<M: Memory> FromBytes for Instruction<M> {
 
 impl<M: Memory> ToBytes for Instruction<M> {
     fn write_le<W: Write>(&self, mut writer: W) -> IoResult<()> {
+        self.opcode().write_le(&mut writer)?;
         match self {
-            Self::Add(instruction) => {
-                u16::write_le(&0u16, &mut writer)?;
-                instruction.write_le(&mut writer)
-            }
-            Self::Sub(instruction) => {
-                u16::write_le(&2u16, &mut writer)?;
-                instruction.write_le(&mut writer)
-            }
+            Instruction::Add(instruction) => instruction.write_le(&mut writer),
+            Instruction::Div(instruction) => instruction.write_le(&mut writer),
+            Instruction::Double(instruction) => instruction.write_le(&mut writer),
+            Instruction::Equal(instruction) => instruction.write_le(&mut writer),
+            Instruction::GreaterThan(instruction) => instruction.write_le(&mut writer),
+            Instruction::GreaterThanOrEqual(instruction) => instruction.write_le(&mut writer),
+            Instruction::Inv(instruction) => instruction.write_le(&mut writer),
+            Instruction::LessThan(instruction) => instruction.write_le(&mut writer),
+            Instruction::LessThanOrEqual(instruction) => instruction.write_le(&mut writer),
+            Instruction::Mul(instruction) => instruction.write_le(&mut writer),
+            Instruction::Neg(instruction) => instruction.write_le(&mut writer),
+            Instruction::NotEqual(instruction) => instruction.write_le(&mut writer),
+            Instruction::Pow(instruction) => instruction.write_le(&mut writer),
+            Instruction::Square(instruction) => instruction.write_le(&mut writer),
+            Instruction::Sub(instruction) => instruction.write_le(&mut writer),
+            Instruction::Ternary(instruction) => instruction.write_le(&mut writer),
         }
     }
 }

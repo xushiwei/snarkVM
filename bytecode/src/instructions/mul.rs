@@ -32,7 +32,7 @@ impl<M: Memory> Operation for Mul<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "mul"
     }
 
@@ -57,7 +57,7 @@ impl<M: Memory> Operation for Mul<M> {
         // Perform the operation.
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Field(a * b),
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(self.operation.destination(), result);
@@ -97,7 +97,7 @@ mod tests {
     use snarkvm_circuits::Circuit;
 
     #[test]
-    fn test_add_field() {
+    fn test_mul_field() {
         let first = Literal::<Circuit>::from_str("1field.public");
         let second = Literal::<Circuit>::from_str("2field.private");
         let expected = Literal::<Circuit>::from_str("2field.private");

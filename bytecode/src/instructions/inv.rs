@@ -32,7 +32,7 @@ impl<M: Memory> Operation for Inv<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "inv"
     }
 
@@ -56,7 +56,7 @@ impl<M: Memory> Operation for Inv<M> {
         // Perform the operation.
         let result = match operand {
             Literal::Field(a) => Literal::Field(a.inv()),
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(self.operation.destination(), result);
@@ -101,7 +101,7 @@ mod tests {
         let expected = Literal::<Circuit>::from_str("1field.private");
 
         let memory = Stack::<Circuit>::default();
-        Input::from_str("input r0 field.private;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r0 field.private;", &memory).assign(operand).evaluate(&memory);
 
         Inv::<Stack<Circuit>>::from_str("r1 r0", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(1)));

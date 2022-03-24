@@ -35,7 +35,7 @@ impl<M: Memory> Operation for Neg<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "neg"
     }
 
@@ -59,7 +59,7 @@ impl<M: Memory> Operation for Neg<M> {
         // Perform the operation.
         let result = match operand {
             Literal::Field(a) => Literal::Field(a.neg()),
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(self.operation.destination(), result);
@@ -106,7 +106,7 @@ mod tests {
         );
 
         let memory = Stack::<Circuit>::default();
-        Input::from_str("input r0 field.private;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r0 field.private;", &memory).assign(operand).evaluate(&memory);
 
         Neg::<Stack<Circuit>>::from_str("r1 r0", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(1)));

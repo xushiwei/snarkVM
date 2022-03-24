@@ -32,7 +32,7 @@ impl<M: Memory> Operation for LessThan<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "lt"
     }
 
@@ -57,7 +57,7 @@ impl<M: Memory> Operation for LessThan<M> {
         // Perform the operation.
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Boolean(a.is_less_than(&b)),
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(self.operation.destination(), result);

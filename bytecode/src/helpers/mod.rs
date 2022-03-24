@@ -36,9 +36,9 @@ pub trait Operation: Display {
     type Memory: Memory;
 
     ///
-    /// Returns the opcode of the instruction.
+    /// Returns the mnemonic of the instruction.
     ///
-    fn opcode() -> &'static str;
+    fn mnemonic() -> &'static str;
 
     ///
     /// Parses a string literal into an object.

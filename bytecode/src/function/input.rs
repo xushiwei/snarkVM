@@ -55,7 +55,7 @@ impl<M: Memory> Operation for Input<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "input"
     }
 
@@ -95,7 +95,7 @@ impl<M: Memory> Operation for Input<M> {
 
 impl<M: Memory> fmt::Display for Input<M> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {};", Self::opcode(), self.argument)
+        write!(f, "{} {};", Self::mnemonic(), self.argument)
     }
 }
 

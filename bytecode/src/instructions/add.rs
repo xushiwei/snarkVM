@@ -30,13 +30,13 @@ pub struct Add<M: Memory> {
 impl<M: Memory> Operation for Add<M> {
     type Memory = M;
 
-    /// Returns the opcode as a string.
+    /// Returns the mnemonic for the `Add` operation.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "add"
     }
 
-    /// Parses a string into an 'add' operation.
+    /// Parses a string into an `Add` operation.
     #[inline]
     fn parse(string: &str, memory: Self::Memory) -> ParserResult<Self> {
         // Parse the operation from the string.
@@ -60,7 +60,7 @@ impl<M: Memory> Operation for Add<M> {
             (Literal::Group(a), Literal::Group(b)) => Literal::Group(a + b),
             (Literal::I8(a), Literal::I8(b)) => Literal::I8(a + b),
             (Literal::U8(a), Literal::U8(b)) => Literal::U8(a + b),
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(self.operation.destination(), result);

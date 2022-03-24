@@ -32,7 +32,7 @@ impl<M: Memory> Operation for Output<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "output"
     }
 
@@ -76,7 +76,7 @@ impl<M: Memory> Operation for Output<M> {
 
 impl<M: Memory> fmt::Display for Output<M> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {};", Self::opcode(), self.argument)
+        write!(f, "{} {};", Self::mnemonic(), self.argument)
     }
 }
 

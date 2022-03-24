@@ -32,7 +32,7 @@ impl<M: Memory> Operation for NotEqual<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
+    fn mnemonic() -> &'static str {
         "neq"
     }
 
@@ -57,7 +57,7 @@ impl<M: Memory> Operation for NotEqual<M> {
         // Perform the operation.
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Boolean(a.is_not_equal(&b)),
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(self.operation.destination(), result);
@@ -97,7 +97,7 @@ mod tests {
     use snarkvm_circuits::Circuit;
 
     #[test]
-    fn test_add_field() {
+    fn test_neq_field() {
         let first = Literal::<Circuit>::from_str("1field.public");
         let second = Literal::<Circuit>::from_str("2field.private");
         let expected = Literal::<Circuit>::from_str("true.private");
@@ -106,7 +106,7 @@ mod tests {
         Input::from_str("input r0 field.public;", &memory).assign(first).evaluate(&memory);
         Input::from_str("input r1 field.private;", &memory).assign(second).evaluate(&memory);
 
-        NotEquals::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
+        NotEqual::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(2)));
     }
 }

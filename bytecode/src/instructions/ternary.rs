@@ -35,8 +35,8 @@ impl<M: Memory> Operation for Ternary<M> {
 
     /// Returns the opcode as a string.
     #[inline]
-    fn opcode() -> &'static str {
-        "add"
+    fn mnemonic() -> &'static str {
+        "ter"
     }
 
     // TODO (@pranav) Consider implementing a ternary parser.
@@ -55,7 +55,7 @@ impl<M: Memory> Operation for Ternary<M> {
         let (string, first) = Operand::parse(string)?;
         // Parse the space from the string.
         let (string, _) = tag(" ")(string)?;
-        // Parse the second operand from the string.
+        // Parse the third operand from the string.
         let (string, second) = Operand::parse(string)?;
 
         // Initialize the destination register.
@@ -77,7 +77,7 @@ impl<M: Memory> Operation for Ternary<M> {
             (Literal::Boolean(condition), Literal::Field(a), Literal::Field(b)) => {
                 Literal::Field(Field::ternary(&condition, &a, &b))
             }
-            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::opcode())),
+            _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
         memory.store(&self.destination, result);
@@ -124,30 +124,18 @@ mod tests {
     use snarkvm_circuits::Circuit;
 
     #[test]
-    fn test_add_field() {
-        let first = Literal::<Circuit>::from_str("1field.public");
-        let second = Literal::<Circuit>::from_str("2field.private");
-        let expected = Literal::<Circuit>::from_str("3field.private");
+    fn test_ternary_field() {
+        let condition = Literal::<Circuit>::from_str("true.private");
+        let first = Literal::<Circuit>::from_str("0field.private");
+        let second = Literal::<Circuit>::from_str("1field.private");
+        let expected = Literal::<Circuit>::from_str("0field.private");
 
         let memory = Stack::<Circuit>::default();
-        Input::from_str("input r0 field.public;", &memory).assign(first).evaluate(&memory);
-        Input::from_str("input r1 field.private;", &memory).assign(second).evaluate(&memory);
+        Input::from_str("input r0 boolean.private;", &memory).assign(condition).evaluate(&memory);
+        Input::from_str("input r1 field.private;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r2 field.private;", &memory).assign(second).evaluate(&memory);
 
-        Ternary::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
-        assert_eq!(expected, memory.load(&Register::new(2)));
-    }
-
-    #[test]
-    fn test_add_group() {
-        let first = Literal::<Circuit>::from_str("2group.public");
-        let second = Literal::<Circuit>::from_str("0group.private");
-        let expected = Literal::<Circuit>::from_str("2group.private");
-
-        let memory = Stack::<Circuit>::default();
-        Input::from_str("input r0 group.public;", &memory).assign(first).evaluate(&memory);
-        Input::from_str("input r1 group.private;", &memory).assign(second).evaluate(&memory);
-
-        Ternary::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
-        assert_eq!(expected, memory.load(&Register::new(2)));
+        Ternary::<Stack<Circuit>>::from_str("r3 r0 r1 r2", &memory).evaluate(&memory);
+        assert_eq!(expected, memory.load(&Register::new(3)));
     }
 }
