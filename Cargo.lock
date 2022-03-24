@@ -2021,6 +2021,8 @@ dependencies = [
 name = "snarkvm-bytecode"
 version = "0.7.5"
 dependencies = [
+ "enum_index",
+ "enum_index_derive",
  "nom",
  "once_cell",
  "snarkvm-algorithms",

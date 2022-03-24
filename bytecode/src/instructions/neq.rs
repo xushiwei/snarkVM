@@ -57,6 +57,7 @@ impl<M: Memory> Operation for NotEqual<M> {
         // Perform the operation.
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Boolean(a.is_not_equal(&b)),
+            (Literal::Group(a), Literal::Group(b)) => Literal::Boolean(a.is_not_equal(&b)),
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
@@ -105,6 +106,20 @@ mod tests {
         let memory = Stack::<Circuit>::default();
         Input::from_str("input r0 field.public;", &memory).assign(first).evaluate(&memory);
         Input::from_str("input r1 field.private;", &memory).assign(second).evaluate(&memory);
+
+        NotEqual::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
+        assert_eq!(expected, memory.load(&Register::new(2)));
+    }
+
+    #[test]
+    fn test_neq_group() {
+        let first = Literal::<Circuit>::from_str("2group.public");
+        let second = Literal::<Circuit>::from_str("2group.private");
+        let expected = Literal::<Circuit>::from_str("false.private");
+
+        let memory = Stack::<Circuit>::default();
+        Input::from_str("input r0 group.public;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r1 group.private;", &memory).assign(second).evaluate(&memory);
 
         NotEqual::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(2)));

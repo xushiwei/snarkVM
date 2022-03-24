@@ -56,6 +56,7 @@ impl<M: Memory> Operation for Double<M> {
         // Perform the operation.
         let result = match operand {
             Literal::Field(a) => Literal::Field(a.double()),
+            Literal::Group(a) => Literal::Group(a.double()),
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
@@ -102,6 +103,18 @@ mod tests {
 
         let memory = Stack::<Circuit>::default();
         Input::from_str("input r0 field.private;", &memory).assign(operand).evaluate(&memory);
+
+        Double::<Stack<Circuit>>::from_str("r1 r0", &memory).evaluate(&memory);
+        assert_eq!(expected, memory.load(&Register::new(1)));
+    }
+
+    #[test]
+    fn test_double_group() {
+        let operand = Literal::<Circuit>::from_str("0group.private");
+        let expected = Literal::<Circuit>::from_str("0group.private");
+
+        let memory = Stack::<Circuit>::default();
+        Input::from_str("input r0 group.private;", &memory).assign(operand).evaluate(&memory);
 
         Double::<Stack<Circuit>>::from_str("r1 r0", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(1)));

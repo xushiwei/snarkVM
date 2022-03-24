@@ -15,7 +15,7 @@
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{instructions::Instruction, Memory, Operand, Operation, Register};
-use snarkvm_circuits::{Field, Literal, Parser, ParserResult, Ternary as CircuitTernary};
+use snarkvm_circuits::{Field, Group, Literal, Parser, ParserResult, Ternary as CircuitTernary};
 use snarkvm_utilities::{FromBytes, ToBytes};
 
 use core::fmt;
@@ -77,6 +77,9 @@ impl<M: Memory> Operation for Ternary<M> {
             (Literal::Boolean(condition), Literal::Field(a), Literal::Field(b)) => {
                 Literal::Field(Field::ternary(&condition, &a, &b))
             }
+            (Literal::Boolean(condition), Literal::Group(a), Literal::Group(b)) => {
+                Literal::Group(Group::ternary(&condition, &a, &b))
+            }
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
@@ -134,6 +137,22 @@ mod tests {
         Input::from_str("input r0 boolean.private;", &memory).assign(condition).evaluate(&memory);
         Input::from_str("input r1 field.private;", &memory).assign(first).evaluate(&memory);
         Input::from_str("input r2 field.private;", &memory).assign(second).evaluate(&memory);
+
+        Ternary::<Stack<Circuit>>::from_str("r3 r0 r1 r2", &memory).evaluate(&memory);
+        assert_eq!(expected, memory.load(&Register::new(3)));
+    }
+
+    #[test]
+    fn test_ternary_group() {
+        let condition = Literal::<Circuit>::from_str("false.private");
+        let first = Literal::<Circuit>::from_str("0group.private");
+        let second = Literal::<Circuit>::from_str("2group.private");
+        let expected = Literal::<Circuit>::from_str("2group.private");
+
+        let memory = Stack::<Circuit>::default();
+        Input::from_str("input r0 boolean.private;", &memory).assign(condition).evaluate(&memory);
+        Input::from_str("input r1 group.private;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r2 group.private;", &memory).assign(second).evaluate(&memory);
 
         Ternary::<Stack<Circuit>>::from_str("r3 r0 r1 r2", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(3)));
