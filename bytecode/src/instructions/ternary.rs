@@ -15,7 +15,7 @@
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{instructions::Instruction, Memory, Operand, Operation, Register};
-use snarkvm_circuits::{Field, Group, Literal, Parser, ParserResult, Ternary as CircuitTernary};
+use snarkvm_circuits::{Field, Group, Literal, Parser, ParserResult, Scalar, Ternary as CircuitTernary};
 use snarkvm_utilities::{FromBytes, ToBytes};
 
 use core::fmt;
@@ -79,6 +79,9 @@ impl<M: Memory> Operation for Ternary<M> {
             }
             (Literal::Boolean(condition), Literal::Group(a), Literal::Group(b)) => {
                 Literal::Group(Group::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::Scalar(a), Literal::Scalar(b)) => {
+                Literal::Scalar(Scalar::ternary(&condition, &a, &b))
             }
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
@@ -153,6 +156,22 @@ mod tests {
         Input::from_str("input r0 boolean.private;", &memory).assign(condition).evaluate(&memory);
         Input::from_str("input r1 group.private;", &memory).assign(first).evaluate(&memory);
         Input::from_str("input r2 group.private;", &memory).assign(second).evaluate(&memory);
+
+        Ternary::<Stack<Circuit>>::from_str("r3 r0 r1 r2", &memory).evaluate(&memory);
+        assert_eq!(expected, memory.load(&Register::new(3)));
+    }
+
+    #[test]
+    fn test_ternary_scalar() {
+        let condition = Literal::<Circuit>::from_str("false.private");
+        let first = Literal::<Circuit>::from_str("0scalar.private");
+        let second = Literal::<Circuit>::from_str("1scalar.private");
+        let expected = Literal::<Circuit>::from_str("1scalar.private");
+
+        let memory = Stack::<Circuit>::default();
+        Input::from_str("input r0 boolean.private;", &memory).assign(condition).evaluate(&memory);
+        Input::from_str("input r1 scalar.private;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r2 scalar.private;", &memory).assign(second).evaluate(&memory);
 
         Ternary::<Stack<Circuit>>::from_str("r3 r0 r1 r2", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(3)));

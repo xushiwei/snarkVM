@@ -57,6 +57,7 @@ impl<M: Memory> Operation for LessThan<M> {
         // Perform the operation.
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::Scalar(a), Literal::Scalar(b)) => Literal::Boolean(a.is_less_than(&b)),
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
@@ -105,6 +106,20 @@ mod tests {
         let memory = Stack::<Circuit>::default();
         Input::from_str("input r0 field.public;", &memory).assign(first).evaluate(&memory);
         Input::from_str("input r1 field.private;", &memory).assign(second).evaluate(&memory);
+
+        LessThan::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
+        assert_eq!(expected, memory.load(&Register::new(2)));
+    }
+
+    #[test]
+    fn test_less_than_scalar() {
+        let first = Literal::<Circuit>::from_str("2scalar.public");
+        let second = Literal::<Circuit>::from_str("1scalar.private");
+        let expected = Literal::<Circuit>::from_str("false.private");
+
+        let memory = Stack::<Circuit>::default();
+        Input::from_str("input r0 scalar.public;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r1 scalar.private;", &memory).assign(second).evaluate(&memory);
 
         LessThan::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(2)));

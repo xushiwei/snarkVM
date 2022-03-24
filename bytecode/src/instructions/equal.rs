@@ -58,6 +58,7 @@ impl<M: Memory> Operation for Equal<M> {
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Boolean(a.is_equal(&b)),
             (Literal::Group(a), Literal::Group(b)) => Literal::Boolean(a.is_equal(&b)),
+            (Literal::Scalar(a), Literal::Scalar(b)) => Literal::Boolean(a.is_equal(&b)),
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 
@@ -120,6 +121,20 @@ mod tests {
         let memory = Stack::<Circuit>::default();
         Input::from_str("input r0 group.public;", &memory).assign(first).evaluate(&memory);
         Input::from_str("input r1 group.private;", &memory).assign(second).evaluate(&memory);
+
+        Equal::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
+        assert_eq!(expected, memory.load(&Register::new(2)));
+    }
+
+    #[test]
+    fn test_equal_scalar() {
+        let first = Literal::<Circuit>::from_str("2scalar.public");
+        let second = Literal::<Circuit>::from_str("2scalar.private");
+        let expected = Literal::<Circuit>::from_str("true.private");
+
+        let memory = Stack::<Circuit>::default();
+        Input::from_str("input r0 scalar.public;", &memory).assign(first).evaluate(&memory);
+        Input::from_str("input r1 scalar.private;", &memory).assign(second).evaluate(&memory);
 
         Equal::<Stack<Circuit>>::from_str("r2 r0 r1", &memory).evaluate(&memory);
         assert_eq!(expected, memory.load(&Register::new(2)));
