@@ -60,6 +60,16 @@ impl<M: Memory> Operation for Neg<M> {
         let result = match operand {
             Literal::Field(a) => Literal::Field(a.neg()),
             Literal::Group(a) => Literal::Group(a.neg()),
+            Literal::I8(a) => Literal::I8(a.neg()),
+            Literal::I16(a) => Literal::I16(a.neg()),
+            Literal::I32(a) => Literal::I32(a.neg()),
+            Literal::I64(a) => Literal::I64(a.neg()),
+            Literal::I128(a) => Literal::I128(a.neg()),
+            Literal::U8(a) => Literal::U8(a.neg()),
+            Literal::U16(a) => Literal::U16(a.neg()),
+            Literal::U32(a) => Literal::U32(a.neg()),
+            Literal::U64(a) => Literal::U64(a.neg()),
+            Literal::U128(a) => Literal::U128(a.neg()),
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 

@@ -58,6 +58,16 @@ impl<M: Memory> Operation for Sub<M> {
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Field(a - b),
             (Literal::Group(a), Literal::Group(b)) => Literal::Group(a - b),
+            (Literal::I8(a), Literal::I8(b)) => Literal::I8(a - b),
+            (Literal::I16(a), Literal::I16(b)) => Literal::I16(a - b),
+            (Literal::I32(a), Literal::I32(b)) => Literal::I32(a - b),
+            (Literal::I64(a), Literal::I64(b)) => Literal::I64(a - b),
+            (Literal::I128(a), Literal::I128(b)) => Literal::I128(a - b),
+            (Literal::U8(a), Literal::U8(b)) => Literal::U8(a - b),
+            (Literal::U16(a), Literal::U16(b)) => Literal::U16(a - b),
+            (Literal::U32(a), Literal::U32(b)) => Literal::U32(a - b),
+            (Literal::U64(a), Literal::U64(b)) => Literal::U64(a - b),
+            (Literal::U128(a), Literal::U128(b)) => Literal::U128(a - b),
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 

@@ -57,7 +57,17 @@ impl<M: Memory> Operation for LessThan<M> {
         // Perform the operation.
         let result = match (first, second) {
             (Literal::Field(a), Literal::Field(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::I8(a), Literal::I8(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::I16(a), Literal::I16(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::I32(a), Literal::I32(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::I64(a), Literal::I64(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::I128(a), Literal::I128(b)) => Literal::Boolean(a.is_less_than(&b)),
             (Literal::Scalar(a), Literal::Scalar(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::U8(a), Literal::U8(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::U16(a), Literal::U16(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::U32(a), Literal::U32(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::U64(a), Literal::U64(b)) => Literal::Boolean(a.is_less_than(&b)),
+            (Literal::U128(a), Literal::U128(b)) => Literal::Boolean(a.is_less_than(&b)),
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
 

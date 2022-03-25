@@ -54,6 +54,7 @@ impl<M: Memory> Operation for Double<M> {
         let operand = self.operation.operand().load(memory);
 
         // Perform the operation.
+        // TODO (@pranav) Implement double for Integers?
         let result = match operand {
             Literal::Field(a) => Literal::Field(a.double()),
             Literal::Group(a) => Literal::Group(a.double()),

@@ -15,7 +15,25 @@
 // along with the snarkVM library. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{instructions::Instruction, Memory, Operand, Operation, Register};
-use snarkvm_circuits::{Field, Group, Literal, Parser, ParserResult, Scalar, Ternary as CircuitTernary};
+use snarkvm_circuits::{
+    Field,
+    Group,
+    Literal,
+    Parser,
+    ParserResult,
+    Scalar,
+    Ternary as CircuitTernary,
+    I128,
+    I16,
+    I32,
+    I64,
+    I8,
+    U128,
+    U16,
+    U32,
+    U64,
+    U8,
+};
 use snarkvm_utilities::{FromBytes, ToBytes};
 
 use core::fmt;
@@ -80,8 +98,38 @@ impl<M: Memory> Operation for Ternary<M> {
             (Literal::Boolean(condition), Literal::Group(a), Literal::Group(b)) => {
                 Literal::Group(Group::ternary(&condition, &a, &b))
             }
+            (Literal::Boolean(condition), Literal::I8(a), Literal::I8(b)) => {
+                Literal::I8(I8::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::I16(a), Literal::I16(b)) => {
+                Literal::I16(I16::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::I32(a), Literal::I32(b)) => {
+                Literal::I32(I32::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::I64(a), Literal::I64(b)) => {
+                Literal::I64(I64::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::I128(a), Literal::I128(b)) => {
+                Literal::I128(I128::ternary(&condition, &a, &b))
+            }
             (Literal::Boolean(condition), Literal::Scalar(a), Literal::Scalar(b)) => {
                 Literal::Scalar(Scalar::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::U8(a), Literal::U8(b)) => {
+                Literal::U8(U8::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::U16(a), Literal::U16(b)) => {
+                Literal::U16(U16::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::U32(a), Literal::U32(b)) => {
+                Literal::U32(U32::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::U64(a), Literal::U64(b)) => {
+                Literal::U64(U64::ternary(&condition, &a, &b))
+            }
+            (Literal::Boolean(condition), Literal::U128(a), Literal::U128(b)) => {
+                Literal::U128(U128::ternary(&condition, &a, &b))
             }
             _ => Self::Memory::halt(format!("Invalid '{}' instruction", Self::mnemonic())),
         };
