@@ -71,11 +71,17 @@ pub use mul_checked::*;
 pub mod mul_wrapped;
 pub use mul_wrapped::*;
 
+pub mod nand;
+pub use nand::*;
+
 pub mod neg;
 pub use neg::*;
 
 pub mod neq;
 pub use neq::*;
+
+pub mod nor;
+pub use nor::*;
 
 pub mod not;
 pub use not::*;
@@ -176,8 +182,12 @@ pub enum Instruction<M: Memory> {
     MulChecked(MulChecked<M>),
     /// Multiplies `first` with `second`, wrapping on overflow, and stores the result in `destination`.
     MulWrapped(MulWrapped<M>),
+    /// Performs a bitwise NAND operation on `first` and `second`, storing the result in `destination`.
+    Nand(Nand<M>),
     /// Negates `operand`, storing the result in `destination`.
     Neg(Neg<M>),
+    /// Performs a bitwise NOR operation on `first` and `second`, storing the result in `destination`.
+    Nor(Nor<M>),
     /// Performs a bitwise NOT operation on `operand`, storing the result in `destination`.
     Not(Not<M>),
     /// Checks that `first` is not equal to `second`, storing the result in `destination`.
@@ -246,7 +256,9 @@ impl<M: Memory> Instruction<M> {
             Self::Mul(..) => Mul::<M>::mnemonic(),
             Self::MulChecked(..) => MulChecked::<M>::mnemonic(),
             Self::MulWrapped(..) => MulWrapped::<M>::mnemonic(),
+            Self::Nand(..) => Nand::<M>::mnemonic(),
             Self::Neg(..) => Neg::<M>::mnemonic(),
+            Self::Nor(..) => Nor::<M>::mnemonic(),
             Self::Not(..) => Not::<M>::mnemonic(),
             Self::NotEqual(..) => NotEqual::<M>::mnemonic(),
             Self::Or(..) => Or::<M>::mnemonic(),
@@ -289,7 +301,9 @@ impl<M: Memory> Instruction<M> {
             Self::Mul(instruction) => instruction.evaluate(memory),
             Self::MulChecked(instruction) => instruction.evaluate(memory),
             Self::MulWrapped(instruction) => instruction.evaluate(memory),
+            Self::Nand(instruction) => instruction.evaluate(memory),
             Self::Neg(instruction) => instruction.evaluate(memory),
+            Self::Nor(instruction) => instruction.evaluate(memory),
             Self::Not(instruction) => instruction.evaluate(memory),
             Self::NotEqual(instruction) => instruction.evaluate(memory),
             Self::Or(instruction) => instruction.evaluate(memory),
@@ -350,7 +364,9 @@ impl<M: Memory> fmt::Display for Instruction<M> {
             Self::Mul(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
             Self::MulChecked(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
             Self::MulWrapped(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Nand(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
             Self::Neg(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
+            Self::Nor(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
             Self::Not(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
             Self::NotEqual(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
             Self::Or(instruction) => write!(f, "{} {};", self.mnemonic(), instruction),
@@ -420,7 +436,9 @@ impl<M: Memory> ToBytes for Instruction<M> {
             Self::Mul(instruction) => instruction.write_le(&mut writer),
             Self::MulChecked(instruction) => instruction.write_le(&mut writer),
             Self::MulWrapped(instruction) => instruction.write_le(&mut writer),
+            Self::Nand(instruction) => instruction.write_le(&mut writer),
             Self::Neg(instruction) => instruction.write_le(&mut writer),
+            Self::Nor(instruction) => instruction.write_le(&mut writer),
             Self::Not(instruction) => instruction.write_le(&mut writer),
             Self::NotEqual(instruction) => instruction.write_le(&mut writer),
             Self::Or(instruction) => instruction.write_le(&mut writer),
