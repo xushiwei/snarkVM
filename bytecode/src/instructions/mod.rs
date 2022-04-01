@@ -328,11 +328,134 @@ impl<M: Memory> Instruction<M> {
     pub(crate) fn parse(string: &str, memory: M) -> ParserResult<Self> {
         // Parse the whitespace and comments from the string.
         let (string, _) = Sanitizer::parse(string)?;
+        // Nom has a fixed upper bound on the number of parsers that can be composed in a single invocation to `alt`
+        // For this reason, we need to create multiple instruction parsers and then compose them into one.
+        let instruction_parser_one = alt((
+            // TODO: Check that the ordering is safe.
+            // Note that order of the individual parsers matters.
+            preceded(
+                pair(tag(AbsChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| AbsChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(AbsWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| AbsWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Add::<M>::mnemonic()), tag(" ")), map(|s| Add::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(AddChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| AddChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(AddWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| AddWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(And::<M>::mnemonic()), tag(" ")), map(|s| And::parse(s, memory.clone()), Into::into)),
+            preceded(pair(tag(Div::<M>::mnemonic()), tag(" ")), map(|s| Div::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(DivChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| DivChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(DivWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| DivWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(Double::<M>::mnemonic()), tag(" ")),
+                map(|s| Double::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Equal::<M>::mnemonic()), tag(" ")), map(|s| Equal::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(GreaterThan::<M>::mnemonic()), tag(" ")),
+                map(|s| GreaterThan::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(GreaterThanOrEqual::<M>::mnemonic()), tag(" ")),
+                map(|s| GreaterThanOrEqual::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Inv::<M>::mnemonic()), tag(" ")), map(|s| Inv::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(LessThan::<M>::mnemonic()), tag(" ")),
+                map(|s| LessThan::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(LessThanOrEqual::<M>::mnemonic()), tag(" ")),
+                map(|s| LessThanOrEqual::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Mul::<M>::mnemonic()), tag(" ")), map(|s| Mul::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(MulChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| MulChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(MulWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| MulWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Nand::<M>::mnemonic()), tag(" ")), map(|s| Nand::parse(s, memory.clone()), Into::into)),
+            preceded(pair(tag(Neg::<M>::mnemonic()), tag(" ")), map(|s| Neg::parse(s, memory.clone()), Into::into)),
+        ));
+
+        let instruction_parser_two = alt((
+            // TODO: Check that the ordering is safe.
+            // Note that order of the individual parsers matters.
+            preceded(pair(tag(Nor::<M>::mnemonic()), tag(" ")), map(|s| Nor::parse(s, memory.clone()), Into::into)),
+            preceded(pair(tag(Not::<M>::mnemonic()), tag(" ")), map(|s| Not::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(NotEqual::<M>::mnemonic()), tag(" ")),
+                map(|s| NotEqual::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Or::<M>::mnemonic()), tag(" ")), map(|s| Or::parse(s, memory.clone()), Into::into)),
+            preceded(pair(tag(Pow::<M>::mnemonic()), tag(" ")), map(|s| Pow::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(PowChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| PowChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(PowWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| PowWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(ShlChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| ShlChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(ShlWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| ShlWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(ShrChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| ShrChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(ShrWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| ShrWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(Square::<M>::mnemonic()), tag(" ")),
+                map(|s| Square::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Sub::<M>::mnemonic()), tag(" ")), map(|s| Sub::parse(s, memory.clone()), Into::into)),
+            preceded(
+                pair(tag(SubChecked::<M>::mnemonic()), tag(" ")),
+                map(|s| SubChecked::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(SubWrapped::<M>::mnemonic()), tag(" ")),
+                map(|s| SubWrapped::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(
+                pair(tag(Ternary::<M>::mnemonic()), tag(" ")),
+                map(|s| Ternary::parse(s, memory.clone()), Into::into),
+            ),
+            preceded(pair(tag(Xor::<M>::mnemonic()), tag(" ")), map(|s| Xor::parse(s, memory.clone()), Into::into)),
+        ));
+
         // Parse the instruction from the string.
         let (string, instruction) = alt((
+            // TODO: Check that the ordering is safe.
             // Note that order of the individual parsers matters.
-            preceded(pair(tag(Add::<M>::mnemonic()), tag(" ")), map(|s| Add::parse(s, memory.clone()), Into::into)),
-            preceded(pair(tag(Sub::<M>::mnemonic()), tag(" ")), map(|s| Sub::parse(s, memory.clone()), Into::into)),
+            instruction_parser_one,
+            instruction_parser_two,
         ))(string)?;
 
         // Parse the semicolon from the string.
