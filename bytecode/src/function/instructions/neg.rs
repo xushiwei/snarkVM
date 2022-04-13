@@ -118,7 +118,7 @@ impl<P: Program> Into<Instruction<P>> for Neg<P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{test_instruction_halts, test_modes};
+    use crate::{test_instruction_halts, test_modes, Identifier, Process};
 
     test_modes!(field, Neg, "1field", "-1field");
     test_modes!(group, Neg, "2group", "-2group");
@@ -172,4 +172,20 @@ mod tests {
     );
     test_instruction_halts!(boolean_neg_halts, Neg, "Invalid 'neg' instruction", "true.constant");
     test_instruction_halts!(string_neg_halts, Neg, "Invalid 'neg' instruction", "\"hello\".constant");
+
+    #[test]
+    #[should_panic(expected = "message is not a literal")]
+    fn test_composite_halts() {
+        let first = Value::<Process>::Composite(Identifier::from_str("message"), vec![
+            Literal::from_str("2group.public"),
+            Literal::from_str("10field.private"),
+        ]);
+
+        let registers = Registers::<Process>::default();
+        registers.define(&Register::from_str("r0"));
+        registers.define(&Register::from_str("r1"));
+        registers.assign(&Register::from_str("r0"), first);
+
+        Neg::from_str("r0 into r1").evaluate(&registers);
+    }
 }
