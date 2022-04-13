@@ -78,7 +78,7 @@ macro_rules! uint_impl_common {
             pub value: Option<$_type>,
         }
 
-        impl crate::traits::integers::Integer for $name {
+        impl $crate::traits::integers::Integer for $name {
             type IntegerType = $_type;
             type UnsignedGadget = $name;
             type UnsignedIntegerType = $_type;
