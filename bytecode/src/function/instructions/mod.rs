@@ -41,6 +41,9 @@ pub(super) use gt::*;
 pub(super) mod gte;
 pub(super) use gte::*;
 
+pub(super) mod inv;
+pub(super) use inv::*;
+
 pub(super) mod lt;
 pub(super) use lt::*;
 
@@ -131,6 +134,8 @@ pub enum Instruction<P: Program> {
     GreaterThan(GreaterThan<P>),
     /// Checks if `first` is greater than or equal to `second`, storing the result in `destination`.
     GreaterThanOrEqual(GreaterThanOrEqual<P>),
+    /// Computes the multiplicative inverse of `first`, storing the outcome in `destination`.
+    Inv(Inv<P>),
     /// Checks if `first` is less than `second`, storing the outcome in `destination`.
     LessThan(LessThan<P>),
     /// Checks if `first` is less than or equal to `second`, storing the outcome in `destination`.
@@ -173,6 +178,7 @@ impl<P: Program> Instruction<P> {
             Self::Equal(..) => Equal::<P>::opcode(),
             Self::GreaterThan(..) => GreaterThan::<P>::opcode(),
             Self::GreaterThanOrEqual(..) => GreaterThanOrEqual::<P>::opcode(),
+            Self::Inv(..) => Inv::<P>::opcode(),
             Self::LessThan(..) => LessThan::<P>::opcode(),
             Self::LessThanOrEqual(..) => LessThanOrEqual::<P>::opcode(),
             Self::Mul(..) => Mul::<P>::opcode(),
@@ -202,6 +208,7 @@ impl<P: Program> Instruction<P> {
             Self::Equal(equal) => equal.operands(),
             Self::GreaterThan(greater_than) => greater_than.operands(),
             Self::GreaterThanOrEqual(greater_than_or_equal) => greater_than_or_equal.operands(),
+            Self::Inv(inv) => inv.operands(),
             Self::LessThan(less_than) => less_than.operands(),
             Self::LessThanOrEqual(less_than_or_equal) => less_than_or_equal.operands(),
             Self::Mul(mul) => mul.operands(),
@@ -231,6 +238,7 @@ impl<P: Program> Instruction<P> {
             Self::Equal(equal) => equal.destination(),
             Self::GreaterThan(greater_than) => greater_than.destination(),
             Self::GreaterThanOrEqual(greater_than_or_equal) => greater_than_or_equal.destination(),
+            Self::Inv(inv) => inv.destination(),
             Self::LessThan(less_than) => less_than.destination(),
             Self::LessThanOrEqual(less_than_or_equal) => less_than_or_equal.destination(),
             Self::Mul(mul) => mul.destination(),
@@ -260,6 +268,7 @@ impl<P: Program> Instruction<P> {
             Self::Equal(instruction) => instruction.evaluate(registers),
             Self::GreaterThan(instruction) => instruction.evaluate(registers),
             Self::GreaterThanOrEqual(instruction) => instruction.evaluate(registers),
+            Self::Inv(instruction) => instruction.evaluate(registers),
             Self::LessThan(instruction) => instruction.evaluate(registers),
             Self::LessThanOrEqual(instruction) => instruction.evaluate(registers),
             Self::Mul(instruction) => instruction.evaluate(registers),
@@ -291,8 +300,8 @@ impl<P: Program> Parser for Instruction<P> {
             // Note that for nom 7.1, alt supports a maximum of 21 parsers.
             // The nom documentation suggests nesting them if more than 21 are needed, which we do here.
             preceded(pair(tag(Add::<P>::opcode()), tag(" ")), map(Add::parse, Into::into)),
+            preceded(pair(tag(AddWrapped::<P>::opcode()), tag(" ")), map(AddWrapped::parse, Into::into)),
             alt((
-                preceded(pair(tag(AddWrapped::<P>::opcode()), tag(" ")), map(AddWrapped::parse, Into::into)),
                 preceded(pair(tag(And::<P>::opcode()), tag(" ")), map(And::parse, Into::into)),
                 preceded(pair(tag(Div::<P>::opcode()), tag(" ")), map(Div::parse, Into::into)),
                 preceded(pair(tag(DivWrapped::<P>::opcode()), tag(" ")), map(DivWrapped::parse, Into::into)),
@@ -303,6 +312,7 @@ impl<P: Program> Parser for Instruction<P> {
                     pair(tag(GreaterThanOrEqual::<P>::opcode()), tag(" ")),
                     map(GreaterThanOrEqual::parse, Into::into),
                 ),
+                preceded(pair(tag(Inv::<P>::opcode()), tag(" ")), map(Inv::parse, Into::into)),
                 preceded(pair(tag(LessThan::<P>::opcode()), tag(" ")), map(LessThan::parse, Into::into)),
                 preceded(pair(tag(LessThanOrEqual::<P>::opcode()), tag(" ")), map(LessThanOrEqual::parse, Into::into)),
                 preceded(pair(tag(Mul::<P>::opcode()), tag(" ")), map(Mul::parse, Into::into)),
@@ -337,6 +347,7 @@ impl<P: Program> fmt::Display for Instruction<P> {
             Self::Equal(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::GreaterThan(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::GreaterThanOrEqual(instruction) => write!(f, "{} {};", self.opcode(), instruction),
+            Self::Inv(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::LessThan(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::LessThanOrEqual(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::Mul(instruction) => write!(f, "{} {};", self.opcode(), instruction),
@@ -367,20 +378,21 @@ impl<P: Program> FromBytes for Instruction<P> {
             6 => Ok(Self::Equal(Equal::read_le(&mut reader)?)),
             7 => Ok(Self::GreaterThan(GreaterThan::read_le(&mut reader)?)),
             8 => Ok(Self::GreaterThanOrEqual(GreaterThanOrEqual::read_le(&mut reader)?)),
-            9 => Ok(Self::LessThan(LessThan::read_le(&mut reader)?)),
-            10 => Ok(Self::LessThanOrEqual(LessThanOrEqual::read_le(&mut reader)?)),
-            11 => Ok(Self::Mul(Mul::read_le(&mut reader)?)),
-            12 => Ok(Self::MulWrapped(MulWrapped::read_le(&mut reader)?)),
-            13 => Ok(Self::Nand(Nand::read_le(&mut reader)?)),
-            14 => Ok(Self::Neg(Neg::read_le(&mut reader)?)),
-            15 => Ok(Self::Nor(Nor::read_le(&mut reader)?)),
-            16 => Ok(Self::Not(Not::read_le(&mut reader)?)),
-            17 => Ok(Self::NotEqual(NotEqual::read_le(&mut reader)?)),
-            18 => Ok(Self::Or(Or::read_le(&mut reader)?)),
-            19 => Ok(Self::Sub(Sub::read_le(&mut reader)?)),
-            20 => Ok(Self::SubWrapped(SubWrapped::read_le(&mut reader)?)),
-            21 => Ok(Self::Xor(Xor::read_le(&mut reader)?)),
-            22.. => Err(error(format!("Failed to deserialize an instruction of code {code}"))),
+            9 => Ok(Self::Inv(Inv::read_le(&mut reader)?)),
+            10 => Ok(Self::LessThan(LessThan::read_le(&mut reader)?)),
+            11 => Ok(Self::LessThanOrEqual(LessThanOrEqual::read_le(&mut reader)?)),
+            12 => Ok(Self::Mul(Mul::read_le(&mut reader)?)),
+            13 => Ok(Self::MulWrapped(MulWrapped::read_le(&mut reader)?)),
+            14 => Ok(Self::Nand(Nand::read_le(&mut reader)?)),
+            15 => Ok(Self::Neg(Neg::read_le(&mut reader)?)),
+            16 => Ok(Self::Nor(Nor::read_le(&mut reader)?)),
+            17 => Ok(Self::Not(Not::read_le(&mut reader)?)),
+            18 => Ok(Self::NotEqual(NotEqual::read_le(&mut reader)?)),
+            19 => Ok(Self::Or(Or::read_le(&mut reader)?)),
+            20 => Ok(Self::Sub(Sub::read_le(&mut reader)?)),
+            21 => Ok(Self::SubWrapped(SubWrapped::read_le(&mut reader)?)),
+            22 => Ok(Self::Xor(Xor::read_le(&mut reader)?)),
+            23.. => Err(error(format!("Failed to deserialize an instruction of code {code}"))),
         }
     }
 }
@@ -424,56 +436,60 @@ impl<P: Program> ToBytes for Instruction<P> {
                 u16::write_le(&8u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::LessThan(instruction) => {
+            Self::Inv(instruction) => {
                 u16::write_le(&9u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::LessThanOrEqual(instruction) => {
+            Self::LessThan(instruction) => {
                 u16::write_le(&10u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Mul(instruction) => {
+            Self::LessThanOrEqual(instruction) => {
                 u16::write_le(&11u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::MulWrapped(instruction) => {
+            Self::Mul(instruction) => {
                 u16::write_le(&12u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Nand(instruction) => {
+            Self::MulWrapped(instruction) => {
                 u16::write_le(&13u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Neg(instruction) => {
+            Self::Nand(instruction) => {
                 u16::write_le(&14u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Nor(instruction) => {
+            Self::Neg(instruction) => {
                 u16::write_le(&15u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Not(instruction) => {
+            Self::Nor(instruction) => {
                 u16::write_le(&16u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::NotEqual(instruction) => {
+            Self::Not(instruction) => {
                 u16::write_le(&17u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Or(instruction) => {
+            Self::NotEqual(instruction) => {
                 u16::write_le(&18u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Sub(instruction) => {
+            Self::Or(instruction) => {
                 u16::write_le(&19u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::SubWrapped(instruction) => {
+            Self::Sub(instruction) => {
                 u16::write_le(&20u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Xor(instruction) => {
+            Self::SubWrapped(instruction) => {
                 u16::write_le(&21u16, &mut writer)?;
+                instruction.write_le(&mut writer)
+            }
+            Self::Xor(instruction) => {
+                u16::write_le(&22u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
         }
