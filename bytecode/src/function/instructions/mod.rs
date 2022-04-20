@@ -92,6 +92,12 @@ pub(super) use shl::*;
 pub(super) mod shl_wrapped;
 pub(super) use shl_wrapped::*;
 
+pub(super) mod shr;
+pub(super) use shr::*;
+
+pub(super) mod shr_wrapped;
+pub(super) use shr_wrapped::*;
+
 pub(super) mod sub;
 pub(super) use sub::*;
 
@@ -189,6 +195,10 @@ pub enum Instruction<P: Program> {
     Shl(Shl<P>),
     /// Shifts `first` left by `second` bits, wrapping around at the boundary of the type, storing the outcome in `destination`.
     ShlWrapped(ShlWrapped<P>),
+    /// Shifts `first` right by `second` bits, storing the outcome in `destination`.
+    Shr(Shr<P>),
+    /// Shifts `first` right by `second` bits, wrapping around at the boundary of the type, storing the outcome in `destination`.
+    ShrWrapped(ShrWrapped<P>),
     /// Subtracts `second` from `first`, storing the outcome in `destination`.
     Sub(Sub<P>),
     /// Subtracts `second` from `first`, wrapping around at the boundary of the type, and storing the outcome in `destination`.
@@ -230,6 +240,8 @@ impl<P: Program> Instruction<P> {
             Self::PowWrapped(..) => PowWrapped::<P>::opcode(),
             Self::Shl(..) => Shl::<P>::opcode(),
             Self::ShlWrapped(..) => ShlWrapped::<P>::opcode(),
+            Self::Shr(..) => Shr::<P>::opcode(),
+            Self::ShrWrapped(..) => ShrWrapped::<P>::opcode(),
             Self::Sub(..) => Sub::<P>::opcode(),
             Self::SubWrapped(..) => SubWrapped::<P>::opcode(),
             Self::Square(..) => Square::<P>::opcode(),
@@ -267,6 +279,8 @@ impl<P: Program> Instruction<P> {
             Self::PowWrapped(pow_wrapped) => pow_wrapped.operands(),
             Self::Shl(shl) => shl.operands(),
             Self::ShlWrapped(shl_wrapped) => shl_wrapped.operands(),
+            Self::Shr(shr) => shr.operands(),
+            Self::ShrWrapped(shr_wrapped) => shr_wrapped.operands(),
             Self::Sub(sub) => sub.operands(),
             Self::SubWrapped(sub_wrapped) => sub_wrapped.operands(),
             Self::Square(square) => square.operands(),
@@ -304,6 +318,8 @@ impl<P: Program> Instruction<P> {
             Self::PowWrapped(pow_wrapped) => pow_wrapped.destination(),
             Self::Shl(shl) => shl.destination(),
             Self::ShlWrapped(shl_wrapped) => shl_wrapped.destination(),
+            Self::Shr(shr) => shr.destination(),
+            Self::ShrWrapped(shr_wrapped) => shr_wrapped.destination(),
             Self::Sub(sub) => sub.destination(),
             Self::SubWrapped(sub_wrapped) => sub_wrapped.destination(),
             Self::Square(square) => square.destination(),
@@ -341,6 +357,8 @@ impl<P: Program> Instruction<P> {
             Self::PowWrapped(instruction) => instruction.evaluate(registers),
             Self::Shl(instruction) => instruction.evaluate(registers),
             Self::ShlWrapped(instruction) => instruction.evaluate(registers),
+            Self::Shr(instruction) => instruction.evaluate(registers),
+            Self::ShrWrapped(instruction) => instruction.evaluate(registers),
             Self::Sub(instruction) => instruction.evaluate(registers),
             Self::SubWrapped(instruction) => instruction.evaluate(registers),
             Self::Square(instruction) => instruction.evaluate(registers),
@@ -371,12 +389,12 @@ impl<P: Program> Parser for Instruction<P> {
             preceded(pair(tag(DivWrapped::<P>::opcode()), tag(" ")), map(DivWrapped::parse, Into::into)),
             preceded(pair(tag(Double::<P>::opcode()), tag(" ")), map(Double::parse, Into::into)),
             preceded(pair(tag(Equal::<P>::opcode()), tag(" ")), map(Equal::parse, Into::into)),
+            preceded(pair(tag(GreaterThan::<P>::opcode()), tag(" ")), map(GreaterThan::parse, Into::into)),
+            preceded(
+                pair(tag(GreaterThanOrEqual::<P>::opcode()), tag(" ")),
+                map(GreaterThanOrEqual::parse, Into::into),
+            ),
             alt((
-                preceded(pair(tag(GreaterThan::<P>::opcode()), tag(" ")), map(GreaterThan::parse, Into::into)),
-                preceded(
-                    pair(tag(GreaterThanOrEqual::<P>::opcode()), tag(" ")),
-                    map(GreaterThanOrEqual::parse, Into::into),
-                ),
                 preceded(pair(tag(Inv::<P>::opcode()), tag(" ")), map(Inv::parse, Into::into)),
                 preceded(pair(tag(LessThan::<P>::opcode()), tag(" ")), map(LessThan::parse, Into::into)),
                 preceded(pair(tag(LessThanOrEqual::<P>::opcode()), tag(" ")), map(LessThanOrEqual::parse, Into::into)),
@@ -392,6 +410,8 @@ impl<P: Program> Parser for Instruction<P> {
                 preceded(pair(tag(PowWrapped::<P>::opcode()), tag(" ")), map(PowWrapped::parse, Into::into)),
                 preceded(pair(tag(Shl::<P>::opcode()), tag(" ")), map(Shl::parse, Into::into)),
                 preceded(pair(tag(ShlWrapped::<P>::opcode()), tag(" ")), map(ShlWrapped::parse, Into::into)),
+                preceded(pair(tag(Shr::<P>::opcode()), tag(" ")), map(Shr::parse, Into::into)),
+                preceded(pair(tag(ShrWrapped::<P>::opcode()), tag(" ")), map(ShrWrapped::parse, Into::into)),
                 preceded(pair(tag(Sub::<P>::opcode()), tag(" ")), map(Sub::parse, Into::into)),
                 preceded(pair(tag(SubWrapped::<P>::opcode()), tag(" ")), map(SubWrapped::parse, Into::into)),
                 preceded(pair(tag(Square::<P>::opcode()), tag(" ")), map(Square::parse, Into::into)),
@@ -434,6 +454,8 @@ impl<P: Program> fmt::Display for Instruction<P> {
             Self::PowWrapped(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::Shl(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::ShlWrapped(instruction) => write!(f, "{} {};", self.opcode(), instruction),
+            Self::Shr(instruction) => write!(f, "{} {};", self.opcode(), instruction),
+            Self::ShrWrapped(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::Sub(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::SubWrapped(instruction) => write!(f, "{} {};", self.opcode(), instruction),
             Self::Square(instruction) => write!(f, "{} {};", self.opcode(), instruction),
@@ -472,11 +494,13 @@ impl<P: Program> FromBytes for Instruction<P> {
             23 => Ok(Self::PowWrapped(PowWrapped::read_le(&mut reader)?)),
             24 => Ok(Self::Shl(Shl::read_le(&mut reader)?)),
             25 => Ok(Self::ShlWrapped(ShlWrapped::read_le(&mut reader)?)),
-            26 => Ok(Self::Sub(Sub::read_le(&mut reader)?)),
-            27 => Ok(Self::SubWrapped(SubWrapped::read_le(&mut reader)?)),
-            28 => Ok(Self::Square(Square::read_le(&mut reader)?)),
-            29 => Ok(Self::Xor(Xor::read_le(&mut reader)?)),
-            30.. => Err(error(format!("Failed to deserialize an instruction of code {code}"))),
+            26 => Ok(Self::Shr(Shr::read_le(&mut reader)?)),
+            27 => Ok(Self::ShrWrapped(ShrWrapped::read_le(&mut reader)?)),
+            28 => Ok(Self::Sub(Sub::read_le(&mut reader)?)),
+            29 => Ok(Self::SubWrapped(SubWrapped::read_le(&mut reader)?)),
+            30 => Ok(Self::Square(Square::read_le(&mut reader)?)),
+            31 => Ok(Self::Xor(Xor::read_le(&mut reader)?)),
+            32.. => Err(error(format!("Failed to deserialize an instruction of code {code}"))),
         }
     }
 }
@@ -588,20 +612,28 @@ impl<P: Program> ToBytes for Instruction<P> {
                 u16::write_le(&25u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Sub(instruction) => {
+            Self::Shr(instruction) => {
                 u16::write_le(&26u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::SubWrapped(instruction) => {
+            Self::ShrWrapped(instruction) => {
                 u16::write_le(&27u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Square(instruction) => {
+            Self::Sub(instruction) => {
                 u16::write_le(&28u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
-            Self::Xor(instruction) => {
+            Self::SubWrapped(instruction) => {
                 u16::write_le(&29u16, &mut writer)?;
+                instruction.write_le(&mut writer)
+            }
+            Self::Square(instruction) => {
+                u16::write_le(&30u16, &mut writer)?;
+                instruction.write_le(&mut writer)
+            }
+            Self::Xor(instruction) => {
+                u16::write_le(&31u16, &mut writer)?;
                 instruction.write_le(&mut writer)
             }
         }
